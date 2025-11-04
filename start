@@ -16,6 +16,8 @@
             --color-reset: #F59E0B; /* Tailwind amber-500 */
             --color-sorus: #3B82F6; /* Tailwind blue-500 */
             --color-sorus-auto: #8B5CF6; /* Tailwind violet-500 */
+            --color-simulador: #EC4899; /* Tailwind pink-500 */
+            --color-simulador-sorus: #3B82F6; /* Tailwind blue-500 */
         }
         body {
             font-family: 'Inter', sans-serif;
@@ -58,19 +60,24 @@
             transition: all 0.2s;
         }
         .tab-active-martingale {
-            background-color: #10B981; /* Green */
+            background-color: var(--color-win);
             color: white;
-            border-bottom: 2px solid #10B981;
+            border-bottom: 2px solid var(--color-win);
         }
-        .tab-active-sorus {
+        .tab-active-sorus-auto {
+            background-color: var(--color-sorus-auto);
+            color: white;
+            border-bottom: 2px solid var(--color-sorus-auto);
+        }
+        .tab-active-simulador-calculo {
+            background-color: #EC4899; /* Pink */
+            color: white;
+            border-bottom: 2px solid #EC4899;
+        }
+        .tab-active-simulador-sorus {
             background-color: #3B82F6; /* Blue */
             color: white;
             border-bottom: 2px solid #3B82F6;
-        }
-        .tab-active-sorus-auto {
-            background-color: #8B5CF6; /* Violet */
-            color: white;
-            border-bottom: 2px solid #8B5CF6;
         }
         .tab-inactive {
             background-color: #E5E7EB; /* Gray-200 */
@@ -78,13 +85,6 @@
         }
         .tab-inactive:hover {
             background-color: #D1D5DB; /* Gray-300 */
-        }
-        
-        /* NOVO: Estilo para a aba Simulador */
-        .tab-active-simulador {
-            background-color: #F59E0B; /* Amber-500 */
-            color: white;
-            border-bottom: 2px solid #F59E0B;
         }
         
         /* Estilos para o Modal de Confirmação */
@@ -126,30 +126,28 @@
 
     <div id="app" class="container mx-auto max-w-4xl bg-white rounded-xl custom-shadow p-6 sm:p-8 my-8">
 
-        <!-- TABS DE NAVEGAÇÃO -->
-        <div class="flex border-b-2 border-gray-200 mb-6">
+        <!-- TABS DE NAVEGAÇÃO (4 ABAS) -->
+        <div class="flex flex-wrap border-b-2 border-gray-200 mb-6">
             <div id="tab-martingale" class="tab tab-active-martingale" onclick="switchMode('martingale')">
                 📈 Martingale
             </div>
             <div id="tab-sorus-auto" class="tab tab-inactive" onclick="switchMode('sorus-auto')">
                 🚀 Sorus (Automático)
             </div>
-            <div id="tab-sorus" class="tab tab-inactive" onclick="switchMode('sorus-manual')">
-                💰 Sorus (Manual)
+            <div id="tab-simulador-sorus" class="tab tab-inactive" onclick="switchMode('simulador-sorus')">
+                💰 Simulador Sorus
             </div>
-            <!-- ABA SIMULADOR MOVIDA -->
-            <div id="tab-simulador" class="tab tab-inactive" onclick="switchMode('simulador')">
-                🧮 Simulador
+            <div id="tab-simulador-calculo" class="tab tab-inactive" onclick="switchMode('simulador-calculo')">
+                🧮 Simulador de Cálculo
             </div>
         </div>
 
         <h1 id="main-title" class="text-3xl font-extrabold text-gray-800 mb-6 border-b pb-3">Calculadora Martingale - 6 Entradas</h1>
         <p id="main-description" class="text-gray-500 mb-6">Insira seus parâmetros para calcular o plano de risco em 6 entradas (Martingale).</p>
 
-        <!-- Seção MARTINGALE (REVERTIDA AO ORIGINAL) -->
+        <!-- Seção MARTINGALE (Formato Original Restaurado) -->
         <div id="martingale-app">
-            
-            <!-- Seção de Inputs Martingale (Layout 4 colunas) -->
+            <!-- Seção de Inputs Martingale -->
             <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6 p-4 bg-gray-50 rounded-lg border">
                 <!-- Risco Total -->
                 <div class="flex flex-col">
@@ -158,7 +156,7 @@
                            class="p-2 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500 transition duration-150">
                 </div>
 
-                <!-- Fator de Multiplicação -->
+                <!-- Fator de Multiplicação (Independente) -->
                 <div class="flex flex-col">
                     <label for="fatorMultiplicacao" class="text-sm font-medium text-gray-700 mb-1">Fator de Multiplicação</label>
                     <input type="number" id="fatorMultiplicacao" value="1.4" step="0.01" min="1.01"
@@ -204,7 +202,7 @@
             </div>
         </div>
 
-        <!-- Seção SORUS AUTOMÁTICO -->
+        <!-- Seção SORUS AUTOMÁTICO (LÓGICA ALTERADA) -->
         <div id="sorus-auto-app" class="hidden">
             <!-- Seção de Inputs Sorus Automático -->
             <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6 p-4 bg-violet-50 rounded-lg border border-violet-200">
@@ -216,32 +214,34 @@
                         R$ 0,00
                     </div>
                 </div>
-                <!-- Níveis de Sorus -->
+                <!-- Níveis de Sorus (Máximo) -->
                 <div class="flex flex-col">
-                    <label for="sorusAutoLevels" class="text-sm font-medium text-gray-700 mb-1">Níveis de Sorus (Máx 6)</label>
+                    <label for="sorusAutoLevels" class="text-sm font-medium text-gray-700 mb-1">Níveis Máximos (1-6)</label>
                     <input type="number" id="sorusAutoLevels" value="3" step="1" min="1" max="6"
-                           onchange="calculateSorusAuto()" 
+                           onchange="updateSorusStatusUI()" 
                            class="p-2 border border-violet-300 rounded-lg focus:ring-violet-500 focus:border-violet-500 transition duration-150">
                 </div>
 
-                <!-- Payout Slider Sorus Auto -->
+                <!-- Payout Slider Sorus Auto (Agora afeta SÓ o nível ATUAL) -->
                 <div class="flex flex-col">
                     <label for="payoutSorusAuto" class="text-sm font-medium text-gray-700 mb-3 flex justify-between">
-                        <span>Payout (%)</span>
+                        <span>Payout (Nível Atual)</span>
                         <span id="payoutValueSorusAuto" class="font-bold text-violet-600">92%</span>
                     </label>
                     <input type="range" id="payoutSorusAuto" min="70" max="95" value="92"
+                           oninput="updateSorusAutoUIStatus()"
                            class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer transition duration-150">
                 </div>
             </div>
 
-            <!-- Tabela de Entradas Sorus Automático -->
+            <!-- Tabela de Entradas Sorus Automático (Agora é um histórico + Nível Atual) -->
             <div class="bg-white rounded-lg overflow-hidden shadow-lg mb-4 border border-violet-300">
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-violet-100">
                             <tr>
                                 <th class="px-3 py-3 text-left text-xs font-semibold text-violet-800 uppercase tracking-wider">Nível</th>
+                                <th class="px-3 py-3 text-right text-xs font-semibold text-violet-800 uppercase tracking-wider">Payout (%)</th>
                                 <th class="px-3 py-3 text-right text-xs font-semibold text-violet-800 uppercase tracking-wider">Stake (R$)</th>
                                 <th class="px-3 py-3 text-right text-xs font-semibold text-violet-800 uppercase tracking-wider">Ganho Bruto (R$)</th>
                                 <th class="px-3 py-3 text-right text-xs font-semibold text-violet-800 uppercase tracking-wider">Ganho Líquido (R$)</th>
@@ -249,13 +249,13 @@
                             </tr>
                         </thead>
                         <tbody id="tabelaEntradasSorusAuto" class="bg-white divide-y divide-gray-200">
-                            <!-- Linhas da tabela Sorus Automático -->
+                            <!-- Linhas da tabela Sorus Automático (geradas dinamicamente) -->
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            <!-- Seção de Status e Ações Sorus (NOVA) -->
+            <!-- Seção de Status e Ações Sorus -->
             <div id="sorusStatusSection" class="p-6 border-t-4 border-b-4 border-violet-500 bg-violet-50 rounded-xl mb-6">
                 <p id="sorusProximaEntrada" class="text-xl font-bold text-violet-800 mb-2">
                     PRÓXIMO NÍVEL SORUS: Nível 1 | Stake: R$ 0,00
@@ -275,7 +275,7 @@
                         ❌ Perdeu Nível
                     </button>
                     <button id="btnSorusConcluir" onclick="handleSorusConclude()" disabled
-                            class="flex-1 py-3 bg-blue-600 text-white font-bold rounded-lg shadow-md hover:bg-blue-700 transition duration-150 ease-in-out disabled:opacity-50 flex items-center justify-center">
+                            class="flex-1 py-3 bg-blue-500 text-white font-bold rounded-lg shadow-md hover:bg-blue-600 transition duration-150 ease-in-out disabled:opacity-50 flex items-center justify-center">
                         💰 Concluir Sorus (Coletar)
                     </button>
                     <button id="btnSorusReset" onclick="handleSorusReset()"
@@ -285,161 +285,202 @@
                 </div>
             </div>
 
-            <!-- Resumo Sorus Automático -->
+            <!-- Resumo Sorus Automático (Texto estático) -->
             <div id="sorus-auto-summary" class="p-4 bg-violet-50 rounded-lg border border-violet-300">
-                <p id="sorus-auto-total-profit" class="text-lg font-bold text-violet-800">Lucro Total em 3 Níveis (Vitória em todos, Incluindo Lucro Martingale): R$ 0,00</p>
+                <p id="sorus-auto-total-profit" class="text-lg font-bold text-violet-800">Ganhos são calculados nível a nível.</p>
                 <p class="text-sm text-gray-600">Perda máxima: Entrada Base (R$ <span id="sorus-auto-base-risk">0.00</span>) ou o último stake do Martingale.
                 </p>
             </div>
         </div>
 
-        <!-- Seção SORUS MANUAL -->
-        <div id="sorus-manual-app" class="hidden">
-            <!-- Seção de Inputs Sorus Manual -->
-            <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+        <!-- Seção SIMULADOR SORUS (NOVA ABA FUNDIDA) -->
+        <div id="simulador-sorus-app" class="hidden">
+            
+            <!-- Seletor de Modo de Cálculo (Fixo vs Variável) -->
+            <div class="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <label class="block text-sm font-bold text-gray-700 mb-2">MODO DE CÁLCULO (Simulador Sorus)</label>
+                <div class="flex gap-4">
+                    <div class="flex items-center">
+                        <input type="radio" id="modeSorusFixo" name="sorusSimMode" value="fixo" checked onchange="switchSorusSimMode('fixo')">
+                        <label for="modeSorusFixo" class="ml-2 text-sm font-medium text-gray-900">Payout Fixo</label>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="radio" id="modeSorusVariavel" name="sorusSimMode" value="variavel" onchange="switchSorusSimMode('variavel')">
+                        <label for="modeSorusVariavel" class="ml-2 text-sm font-medium text-gray-900">Payout Variável</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inputs Comuns Sorus -->
+             <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6 p-4 bg-gray-50 rounded-lg border">
                 <!-- Entrada Base -->
                 <div class="flex flex-col">
-                    <label for="sorusBaseEntry" class="text-sm font-medium text-gray-700 mb-1">Entrada Base (R$)</label>
-                    <input type="number" id="sorusBaseEntry" value="10.00" step="0.01" min="0.01"
+                    <label for="sorusSimBaseEntry" class="text-sm font-medium text-gray-700 mb-1">Entrada Base (R$)</label>
+                    <input type="number" id="sorusSimBaseEntry" value="10.00" step="0.01" min="0.01"
                            class="p-2 border border-blue-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150">
                 </div>
                 <!-- Níveis de Sorus -->
                 <div class="flex flex-col">
-                    <label for="sorusLevels" class="text-sm font-medium text-gray-700 mb-1">Níveis de Sorus (Máx 6)</label>
-                    <input type="number" id="sorusLevels" value="3" step="1" min="1" max="6"
+                    <label for="sorusSimLevels" class="text-sm font-medium text-gray-700 mb-1">Níveis de Sorus (Máx 6)</label>
+                    <input type="number" id="sorusSimLevels" value="3" step="1" min="1" max="6"
                            class="p-2 border border-blue-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150">
                 </div>
 
-                <!-- Payout Slider Sorus -->
-                <div class="flex flex-col">
-                    <label for="payoutSorusManual" class="text-sm font-medium text-gray-700 mb-3 flex justify-between">
-                        <span>Payout (%)</span>
-                        <span id="payoutValueSorusManual" class="font-bold text-blue-600">92%</span>
+                <!-- Inputs Payout Fixo (Visível por padrão) -->
+                <div id="sorus-fixo-inputs" class="flex flex-col">
+                    <label for="payoutSorusFixo" class="text-sm font-medium text-gray-700 mb-3 flex justify-between">
+                        <span>Payout Fixo (%)</span>
+                        <span id="payoutValueSorusFixo" class="font-bold text-blue-600">92%</span>
                     </label>
-                    <input type="range" id="payoutSorusManual" min="70" max="95" value="92"
+                    <input type="range" id="payoutSorusFixo" min="70" max="95" value="92"
+                           oninput="document.getElementById('payoutValueSorusFixo').textContent = `${this.value}%`"
                            class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer transition duration-150">
                 </div>
                 
                  <!-- Botão Calcular Sorus -->
-                 <button id="btnCalcularSorusManual" onclick="calculateSorusManual()"
+                 <button id="btnCalcularSorusSim" onclick="calculateSorusSimulador()"
                     class="mt-6 py-2 h-10 bg-blue-600 text-white font-bold rounded-lg shadow-md hover:bg-blue-700 transition duration-150 ease-in-out transform hover:scale-[1.01]">
                     🚀 Calcular Sorus
                 </button>
             </div>
 
-            <!-- Tabela de Entradas Sorus Manual -->
+            <!-- Inputs Payout Variável (Escondido por padrão) -->
+            <div id="sorus-variavel-inputs" class="hidden grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 p-4 bg-gray-50 rounded-lg border">
+                <div class="flex flex-col">
+                    <label for="payoutNivel1" class="text-sm font-medium text-gray-700 mb-1">Payout Nível 1 (%)</label>
+                    <input type="number" id="payoutNivel1" value="92" step="1" min="1" max="99" class="p-2 border border-blue-300 rounded-lg">
+                </div>
+                <div class="flex flex-col">
+                    <label for="payoutNivel2" class="text-sm font-medium text-gray-700 mb-1">Payout Nível 2 (%)</label>
+                    <input type="number" id="payoutNivel2" value="92" step="1" min="1" max="99" class="p-2 border border-blue-300 rounded-lg">
+                </div>
+                <div class="flex flex-col">
+                    <label for="payoutNivel3" class="text-sm font-medium text-gray-700 mb-1">Payout Nível 3 (%)</label>
+                    <input type="number" id="payoutNivel3" value="92" step="1" min="1" max="99" class="p-2 border border-blue-300 rounded-lg">
+                </div>
+                <div class="flex flex-col">
+                    <label for="payoutNivel4" class="text-sm font-medium text-gray-700 mb-1">Payout Nível 4 (%)</label>
+                    <input type="number" id="payoutNivel4" value="92" step="1" min="1" max="99" class="p-2 border border-blue-300 rounded-lg">
+                </div>
+                <div class="flex flex-col">
+                    <label for="payoutNivel5" class="text-sm font-medium text-gray-700 mb-1">Payout Nível 5 (%)</label>
+                    <input type="number" id="payoutNivel5" value="92" step="1" min="1" max="99" class="p-2 border border-blue-300 rounded-lg">
+                </div>
+                <div class="flex flex-col">
+                    <label for="payoutNivel6" class="text-sm font-medium text-gray-700 mb-1">Payout Nível 6 (%)</label>
+                    <input type="number" id="payoutNivel6" value="92" step="1" min="1" max="99" class="p-2 border border-blue-300 rounded-lg">
+                </div>
+            </div>
+
+            <!-- Tabela de Entradas Sorus (Fixo ou Variável) -->
             <div class="bg-white rounded-lg overflow-hidden shadow-lg mb-8 border border-blue-300">
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-blue-100">
                             <tr>
                                 <th class="px-3 py-3 text-left text-xs font-semibold text-blue-800 uppercase tracking-wider">Nível</th>
+                                <th class="px-3 py-3 text-right text-xs font-semibold text-blue-800 uppercase tracking-wider">Payout (%)</th>
                                 <th class="px-3 py-3 text-right text-xs font-semibold text-blue-800 uppercase tracking-wider">Stake (R$)</th>
                                 <th class="px-3 py-3 text-right text-xs font-semibold text-blue-800 uppercase tracking-wider">Ganho Bruto (R$)</th>
                                 <th class="px-3 py-3 text-right text-xs font-semibold text-blue-800 uppercase tracking-wider">Ganho Líquido (R$)</th>
                                 <th class="px-3 py-3 text-right text-xs font-semibold text-blue-800 uppercase tracking-wider">Ganho Total Acumulado (R$)</th>
                             </tr>
                         </thead>
-                        <tbody id="tabelaEntradasSorusManual" class="bg-white divide-y divide-gray-200">
-                            <!-- Linhas da tabela Sorus Manual -->
+                        <tbody id="tabelaEntradasSorusSim" class="bg-white divide-y divide-gray-200">
+                            <!-- Linhas da tabela Sorus Fixo/Variável -->
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            <!-- Resumo Sorus Manual -->
-            <div id="sorus-manual-summary" class="p-4 bg-blue-50 rounded-lg border border-blue-300">
-                <p id="sorus-manual-total-profit" class="text-lg font-bold text-blue-800">Lucro Total em 3 Níveis (Vitória em todos): R$ 0,00</p>
-                <p class="text-sm text-gray-600">Se perder em qualquer nível, a perda máxima é a Entrada Base (R$ <span id="sorus-manual-base-risk">0.00</span>).</p>
+            <!-- Resumo Sorus (Fixo ou Variável) -->
+            <div id="sorus-sim-summary" class="p-4 bg-blue-50 rounded-lg border border-blue-300">
+                <p id="sorus-sim-total-profit" class="text-lg font-bold text-blue-800">Lucro Total em 3 Níveis (Vitória em todos): R$ 0,00</p>
+                <p class="text-sm text-gray-600">Se perder em qualquer nível, a perda máxima é a Entrada Base (R$ <span id="sorus-sim-base-risk">0.00</span>).</p>
             </div>
         </div>
         
-        <!-- Seção SIMULADOR -->
-        <div id="simulador-app" class="hidden">
+        <!-- Seção SIMULADOR DE CÁLCULO (Antiga Simulador) -->
+        <div id="simulador-calculo-app" class="hidden">
             <!-- Seletor de Modo de Cálculo -->
-            <div class="mb-4 p-4 bg-amber-100 rounded-lg border border-amber-300">
+            <div class="mb-4 p-4 bg-pink-50 rounded-lg border border-pink-200">
                 <label class="block text-sm font-bold text-gray-700 mb-2">MODO DE CÁLCULO (Simulador)</label>
                 <div class="flex gap-4">
                     <div class="flex items-center">
-                        <input type="radio" id="modeRiscoSim" name="calcModeSim" value="risco" checked onchange="switchCalcModeSim('risco')">
-                        <label for="modeRiscoSim" class="ml-2 text-sm font-medium text-gray-900">Por Risco Total (Padrão)</label>
+                        <input type="radio" id="modeRiscoCalc" name="calcModeCalc" value="risco" checked onchange="switchCalcModeCalc('risco')">
+                        <label for="modeRiscoCalc" class="ml-2 text-sm font-medium text-gray-900">Por Risco Total</label>
                     </div>
                     <div class="flex items-center">
-                        <input type="radio" id="modeEntradaSim" name="calcModeSim" value="entrada" onchange="switchCalcModeSim('entrada')">
-                        <label for="modeEntradaSim" class="ml-2 text-sm font-medium text-gray-900">Por 1ª Entrada (Simulador)</label>
+                        <input type="radio" id="modeEntradaCalc" name="calcModeCalc" value="entrada" onchange="switchCalcModeCalc('entrada')">
+                        <label for="modeEntradaCalc" class="ml-2 text-sm font-medium text-gray-900">Por 1ª Entrada</label>
                     </div>
                 </div>
             </div>
 
             <!-- Seção de Inputs Simulador (Layout 5 colunas) -->
-            <div class="grid grid-cols-1 sm:grid-cols-5 gap-4 mb-6 p-4 bg-amber-50 rounded-lg border border-amber-300">
-                <!-- Risco Total -->
+            <div class="grid grid-cols-1 sm:grid-cols-5 gap-4 mb-6 p-4 bg-gray-50 rounded-lg border">
+                <!-- Risco Total (Simulador) -->
                 <div class="flex flex-col">
-                    <label for="riscoTotalSim" class="text-sm font-medium text-gray-700 mb-1">Risco Total (R$)</label>
-                    <input type="number" id="riscoTotalSim" value="398.11" step="0.01" min="0.01"
-                           class="p-2 border border-gray-300 rounded-lg focus:ring-amber-500 focus:border-amber-500 transition duration-150">
+                    <label for="riscoTotalCalc" class="text-sm font-medium text-gray-700 mb-1">Risco Total (R$)</label>
+                    <input type="number" id="riscoTotalCalc" value="398.11" step="0.01" min="0.01"
+                           class="p-2 border border-gray-300 rounded-lg focus:ring-pink-500 focus:border-pink-500 transition duration-150">
                 </div>
 
-                <!-- 1ª Entrada -->
+                <!-- 1ª Entrada (Simulador) -->
                 <div class="flex flex-col">
-                    <label for="entrada1Sim" class="text-sm font-medium text-gray-700 mb-1">1ª Entrada (R$)</label>
-                    <input type="number" id="entrada1Sim" value="5.00" step="0.01" min="0.01"
+                    <label for="entrada1Calc" class="text-sm font-medium text-gray-700 mb-1">1ª Entrada (R$)</label>
+                    <input type="number" id="entrada1Calc" value="5.00" step="0.01" min="0.01"
                            class="p-2 border border-gray-300 rounded-lg bg-gray-200 text-gray-500 transition duration-150" disabled>
                 </div>
 
-                <!-- Fator de Multiplicação -->
+                <!-- Fator de Multiplicação (Simulador - Independente) -->
                 <div class="flex flex-col">
-                    <label for="fatorMultiplicacaoSim" class="text-sm font-medium text-gray-700 mb-1">Fator de Multiplicação</label>
-                    <input type="number" id="fatorMultiplicacaoSim" value="1.4" step="0.01" min="1.01"
+                    <label for="fatorMultiplicacaoCalc" class="text-sm font-medium text-gray-700 mb-1">Fator de Multiplicação</label>
+                    <input type="number" id="fatorMultiplicacaoCalc" value="1.4" step="0.01" min="1.01"
                            onchange="confirmFactorChange(this)"
-                           class="p-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-amber-500 focus:border-amber-500 transition duration-150">
+                           class="p-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-pink-500 focus:border-pink-500 transition duration-150">
                 </div>
 
-                <!-- Payout Slider -->
+                <!-- Payout Slider (Simulador - Independente) -->
                 <div class="flex flex-col">
-                    <label for="payoutSim" class="text-sm font-medium text-gray-700 mb-3 flex justify-between">
+                    <label for="payoutCalc" class="text-sm font-medium text-gray-700 mb-3 flex justify-between">
                         <span>Payout (%)</span>
-                        <span id="payoutValueSim" class="font-bold text-amber-600">92%</span>
+                        <span id="payoutValueCalc" class="font-bold text-pink-600">92%</span>
                     </label>
-                    <input type="range" id="payoutSim" min="70" max="95" value="92"
+                    <input type="range" id="payoutCalc" min="70" max="95" value="92"
                            class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer transition duration-150">
                 </div>
                 
-                 <!-- Botão Calcular Fixo no Grid para melhor alinhamento -->
-                 <button id="btnCalcularSim" onclick="calculateSimulator()"
-                    class="mt-6 py-2 h-10 bg-amber-500 text-white font-bold rounded-lg shadow-md hover:bg-amber-600 transition duration-150 ease-in-out transform hover:scale-[1.01]">
-                    🧮 Simular
+                 <!-- Botão Calcular (Simulador) -->
+                 <button id="btnCalcularCalc" onclick="calculateSimuladorCalculo()"
+                    class="mt-6 py-2 h-10 bg-pink-600 text-white font-bold rounded-lg shadow-md hover:bg-pink-700 transition duration-150 ease-in-out transform hover:scale-[1.01]">
+                    🧮 Calcular Plano
                 </button>
             </div>
 
-            <!-- Tabela de Entradas Simulador -->
-            <div class="bg-white rounded-lg overflow-hidden shadow-lg mb-8 border border-amber-300">
+            <!-- Tabela de Entradas (Simulador) -->
+            <div class="bg-white rounded-lg overflow-hidden shadow-lg mb-8 border border-pink-200">
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-amber-100">
+                        <thead class="bg-pink-100">
                             <tr>
-                                <th class="px-3 py-3 text-left text-xs font-semibold text-amber-800 uppercase tracking-wider">Entrada</th>
-                                <th class="px-3 py-3 text-right text-xs font-semibold text-amber-800 uppercase tracking-wider">Valor (R$)</th>
-                                <th class="px-3 py-3 text-right text-xs font-semibold text-amber-800 uppercase tracking-wider">Ganho Bruto (R$)</th>
-                                <th class="px-3 py-3 text-right text-xs font-semibold text-amber-800 uppercase tracking-wider">Ganho Real (Líquido R$)</th>
-                                <th class="px-3 py-3 text-right text-xs font-semibold text-amber-800 uppercase tracking-wider">Perda Acumulada (R$)</th>
+                                <th class="px-3 py-3 text-left text-xs font-semibold text-pink-800 uppercase tracking-wider">Entrada</th>
+                                <th class="px-3 py-3 text-right text-xs font-semibold text-pink-800 uppercase tracking-wider">Valor (R$)</th>
+                                <th class="px-3 py-3 text-right text-xs font-semibold text-pink-800 uppercase tracking-wider">Ganho Bruto (R$)</th>
+                                <th class="px-3 py-3 text-right text-xs font-semibold text-pink-800 uppercase tracking-wider">Ganho Real (Líquido R$)</th>
+                                <th class="px-3 py-3 text-right text-xs font-semibold text-pink-800 uppercase tracking-wider">Perda Acumulada (R$)</th>
                             </tr>
                         </thead>
-                        <tbody id="tabelaEntradasSimulador" class="bg-white divide-y divide-gray-200">
+                        <tbody id="tabelaEntradasCalculo" class="bg-white divide-y divide-gray-200">
                             <!-- Linhas da tabela Simulador -->
                         </tbody>
                     </table>
                 </div>
             </div>
-            
-            <!-- Resumo Simulador -->
-            <div class="p-4 bg-amber-50 rounded-lg border border-amber-300">
-                <p id="somaTotalSimulador" class="text-lg font-bold text-amber-800">Soma das 6 entradas = R$ 0,00 (Risco Calculado)</p>
-            </div>
         </div>
         
-        <!-- Seção de Status, Ações e Resumo (APLICÁVEL SOMENTE AO MARTINGALE/DESEMPENHO GERAL) -->
-        <div id="martingale-actions-and-summary">
+        <!-- Seção de Status, Ações e Resumo (Escondido por padrão, visível em Martingale e Sorus Auto) -->
+        <div id="martingale-actions-and-summary" class="hidden">
             <div id="statusSection" class="p-6 border-t-4 border-b-4 border-blue-500 bg-blue-50 rounded-xl mb-6">
                 <p id="proximaEntrada" class="text-xl font-bold text-blue-800 mb-2">
                     PRÓXIMA ENTRADA: R$ 0,00 | Status: AGUARDANDO CÁLCULO
@@ -495,23 +536,23 @@
                 </div>
             </div>
             
-            <!-- Seção de Análise Martingale -->
+            <!-- Seção de Análise e Gráfico de Gales (MARTINGALE) -->
             <div class="p-4 mb-6 bg-white rounded-xl border border-gray-200 shadow-md">
                 <h2 class="text-lg font-bold text-gray-800 mb-4 border-b pb-1">Análise de Desempenho (Martingale)</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <!-- 1. Gráfico -->
                     <div>
-                        <canvas id="galeChart" class="w-full h-auto max-h-80"></canvas>
+                        <canvas id="martingaleChart" class="w-full h-auto max-h-80"></canvas>
                     </div>
                     <!-- 2. Estatísticas Detalhadas -->
                     <div class="space-y-2">
                         <div class="p-2 bg-gray-50 rounded-lg">
-                            <p class="text-sm font-medium text-gray-700">Total de Operações Martingale (Filtro):</p>
-                            <p id="totalOperationsMartingale" class="text-xl font-extrabold text-gray-800">0</p>
+                            <p class="text-sm font-medium text-gray-700">Total de Ciclos Martingale (Filtro):</p>
+                            <p id="totalOperationsFilteredMartingale" class="text-xl font-extrabold text-gray-800">0</p>
                         </div>
                         <div class="p-2 bg-green-50 rounded-lg">
                             <p class="text-sm font-medium text-green-700">Vitórias por Gale (Contagem/%)</p>
-                            <div id="galeStatistics" class="text-sm space-y-1">
+                            <div id="martingaleStatistics" class="text-sm space-y-1">
                                 <!-- Estatísticas detalhadas serão inseridas aqui -->
                             </div>
                         </div>
@@ -519,22 +560,22 @@
                 </div>
             </div>
             
-            <!-- Seção de Análise Sorus -->
+            <!-- Seção de Análise e Gráfico de Sorus -->
             <div class="p-4 mb-6 bg-white rounded-xl border border-gray-200 shadow-md">
                 <h2 class="text-lg font-bold text-gray-800 mb-4 border-b pb-1">Análise de Desempenho (Sorus)</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- 1. Gráfico -->
+                    <!-- 1. Gráfico Sorus -->
                     <div>
                         <canvas id="sorusChart" class="w-full h-auto max-h-80"></canvas>
                     </div>
-                    <!-- 2. Estatísticas Detalhadas -->
+                    <!-- 2. Estatísticas Detalhadas Sorus -->
                     <div class="space-y-2">
-                        <div class="p-2 bg-gray-50 rounded-lg">
-                            <p class="text-sm font-medium text-gray-700">Total de Ciclos Sorus Concluídos (Filtro):</p>
-                            <p id="totalOperationsSorus" class="text-xl font-extrabold text-gray-800">0</p>
-                        </div>
                         <div class="p-2 bg-violet-50 rounded-lg">
-                            <p class="text-sm font-medium text-violet-700">Ciclos Concluídos por Nível (Contagem/%)</p>
+                            <p class="text-sm font-medium text-violet-700">Total de Ciclos Sorus (Filtro):</p>
+                            <p id="totalOperationsFilteredSorus" class="text-xl font-extrabold text-violet-800">0</p>
+                        </div>
+                        <div class="p-2 bg-green-50 rounded-lg">
+                            <p class="text-sm font-medium text-green-700">Ciclos Concluídos (Nível/%)</p>
                             <div id="sorusStatistics" class="text-sm space-y-1">
                                 <!-- Estatísticas detalhadas serão inseridas aqui -->
                             </div>
@@ -542,6 +583,7 @@
                     </div>
                 </div>
             </div>
+
 
             <!-- Histórico e Filtros -->
             <div class="p-4 bg-gray-100 rounded-lg">
@@ -580,7 +622,6 @@
                 </ul>
             </div>
         </div>
-        
     </div>
 
     <!-- Modal de Confirmação (Novo) -->
@@ -601,7 +642,7 @@
             </div>
         </div>
     </div>
-
+    
     <!-- Modal de Parabéns (A Cereja do Bolo) -->
     <div id="congratsModal" class="modal-overlay">
         <div class="modal-content text-center border-t-8 border-green-500">
@@ -619,7 +660,7 @@
         </div>
     </div>
 
-    <!-- ########## BLOCO DE SCRIPT COMPLETO RESTAURADO ########## -->
+
     <script>
         // Constantes Martingale
         const maxEntries = 6;
@@ -629,10 +670,11 @@
         const PERSISTENCE_KEY = 'martingaleState'; 
 
         // Variáveis globais de estado
-        let currentMode = 'martingale'; // 'martingale', 'sorus-manual', 'sorus-auto', 'simulador'
+        let currentMode = 'martingale'; // 'martingale', 'sorus-auto', 'simulador-sorus', 'simulador-calculo'
         let entriesData = []; // Para Martingale
-        let sorusManualData = []; // Para Sorus Manual
-        let sorusAutoData = []; // Para Sorus Automático
+        let simCalculoEntriesData = []; // Para Simulador de Cálculo
+        let sorusSimEntriesData = []; // Para Simulador Sorus
+        let sorusAutoHistory = []; // NOVO: Histórico de níveis ganhos no Sorus Auto
         let currentEntryIndex = 1; 
         let totalSum = 0;
         let history = []; // INICIALIZAÇÃO EXPLÍCITA PARA GARANTIR QUE É UMA ARRAY
@@ -643,14 +685,8 @@
         let sorusCurrentLevel = 1;
         let sorusCurrentStake = 0;
         let sorusTotalProfitAccumulated = 0; // Lucro líquido acumulado apenas DENTRO do ciclo Sorus
-        
-        // NOVO: Variáveis para vincular Sorus à Operação Martingale (para reversão)
-        let sorusLinkedOperationId = null;
-        let sorusRevertData = {
-            lucroReverter: 0,
-            riscoReverter: 0,
-            capitalAnterior: 0
-        };
+        let sorusLinkedOperationId = null; // ID da operação Martingale que gerou o Sorus
+        let sorusRevertData = null; // Dados para reverter a operação em caso de perda
 
         // VARIÁVEIS DE ACUMULAÇÃO DE DESEMPENHO (P&L GERAL)
         let totalProfit = 0;   
@@ -659,39 +695,52 @@
         let operationCount = 0; 
         let martingaleChartInstance = null; // Instância do Chart.js
         let sorusChartInstance = null; // Instância do Chart.js
-        let lastFactorMartingale = 1.4; // NOVO: Fator independente
-        let lastFactorSimulador = 1.4; // NOVO: Fator independente
-        let calculationModeSim = 'risco'; // NOVO: 'risco' ou 'entrada' (para o SIMULADOR)
+        let lastFactorMartingale = 1.4; // Fator independente Martingale
+        let lastFactorCalculo = 1.4; // Fator independente Simulador de Cálculo
+        let calculationModeCalc = 'risco'; // 'risco' ou 'entrada' (para o SIMULADOR CÁLCULO)
+        let sorusSimMode = 'fixo'; // 'fixo' ou 'variavel' (para o SIMULADOR SORUS)
 
         // Elementos DOM
         const tabelaEntradasMartingale = document.getElementById('tabelaEntradasMartingale');
-        const tabelaEntradasSorusManual = document.getElementById('tabelaEntradasSorusManual');
         const tabelaEntradasSorusAuto = document.getElementById('tabelaEntradasSorusAuto');
+        const tabelaEntradasCalculo = document.getElementById('tabelaEntradasCalculo'); // RENOMEADO
+        const tabelaEntradasSorusSim = document.getElementById('tabelaEntradasSorusSim'); // NOVO
         const martingaleAppDiv = document.getElementById('martingale-app');
-        const sorusManualAppDiv = document.getElementById('sorus-manual-app');
         const sorusAutoAppDiv = document.getElementById('sorus-auto-app');
-        const simuladorAppDiv = document.getElementById('simulador-app'); // NOVO
+        const simuladorCalculoAppDiv = document.getElementById('simulador-calculo-app'); // RENOMEADO
+        const simuladorSorusAppDiv = document.getElementById('simulador-sorus-app'); // NOVO
         
-        // Payout Sliders
+        // Inputs Simulador Sorus
+        const sorusSimBaseEntryInput = document.getElementById('sorusSimBaseEntry');
+        const sorusSimLevelsInput = document.getElementById('sorusSimLevels');
+        const payoutSorusFixoInput = document.getElementById('payoutSorusFixo');
+        const sorusFixoInputsDiv = document.getElementById('sorus-fixo-inputs');
+        const sorusVariavelInputsDiv = document.getElementById('sorus-variavel-inputs');
+        const payoutNivelInputs = [
+            document.getElementById('payoutNivel1'),
+            document.getElementById('payoutNivel2'),
+            document.getElementById('payoutNivel3'),
+            document.getElementById('payoutNivel4'),
+            document.getElementById('payoutNivel5'),
+            document.getElementById('payoutNivel6')
+        ];
+        const sorusSimTotalProfitP = document.getElementById('sorus-sim-total-profit');
+        const sorusSimBaseRiskSpan = document.getElementById('sorus-sim-base-risk');
+        
+        // Sliders de Payout
         const payoutSlider = document.getElementById('payout');
-        const payoutSliderSorusManual = document.getElementById('payoutSorusManual');
         const payoutSliderSorusAuto = document.getElementById('payoutSorusAuto');
-        const payoutSliderSim = document.getElementById('payoutSim'); // NOVO
+        const payoutSliderCalc = document.getElementById('payoutCalc'); // RENOMEADO
         const payoutValueSpan = document.getElementById('payoutValue');
-        const payoutValueSorusManualSpan = document.getElementById('payoutValueSorusManual');
         const payoutValueSorusAutoSpan = document.getElementById('payoutValueSorusAuto');
-        const payoutValueSimSpan = document.getElementById('payoutValueSim'); // NOVO
+        const payoutValueCalcSpan = document.getElementById('payoutValueCalc'); // RENOMEADO
         
         const historicoList = document.getElementById('historico');
-        
-        // Botões Martingale
         const btnGanhou = document.getElementById('btnGanhou');
         const btnPerdeu = document.getElementById('btnPerdeu');
         const proximaEntradaP = document.getElementById('proximaEntrada');
         const lucroLiquidoP = document.getElementById('lucroLiquido');
         const somaTotalP = document.getElementById('somaTotal');
-        const somaTotalSimuladorP = document.getElementById('somaTotalSimulador'); // NOVO
-        
         const dataInicialInput = document.getElementById('dataInicial');
         const dataFinalInput = document.getElementById('dataFinal');
         const mainTitle = document.getElementById('main-title');
@@ -703,27 +752,21 @@
         const netBalanceDisplay = document.getElementById('netBalanceDisplay');
         const netBalanceContainer = document.getElementById('netBalanceContainer');
         const operationCountDisplay = document.getElementById('operationCountDisplay');
-        const galeStatisticsDiv = document.getElementById('galeStatistics');
-        const totalOperationsMartingaleP = document.getElementById('totalOperationsMartingale'); // RENOMEADO
-        const sorusStatisticsDiv = document.getElementById('sorusStatistics'); // NOVO
-        const totalOperationsSorusP = document.getElementById('totalOperationsSorus'); // NOVO
-        
-        // Sorus Manual
-        const sorusManualTotalProfitP = document.getElementById('sorus-manual-total-profit');
-        const sorusManualBaseRiskSpan = document.getElementById('sorus-manual-base-risk');
-        // Sorus Auto
+        const martingaleStatisticsDiv = document.getElementById('martingaleStatistics');
+        const totalOperationsFilteredMartingaleP = document.getElementById('totalOperationsFilteredMartingale');
+        const sorusStatisticsDiv = document.getElementById('sorusStatistics');
+        const totalOperationsFilteredSorusP = document.getElementById('totalOperationsFilteredSorus');
         const sorusAutoTotalProfitP = document.getElementById('sorus-auto-total-profit');
         const sorusAutoBaseRiskSpan = document.getElementById('sorus-auto-base-risk');
         const martingaleActionsAndSummaryDiv = document.getElementById('martingale-actions-and-summary');
         const sorusAutoBaseEntryDisplay = document.getElementById('sorusAutoBaseEntryDisplay');
-        
         // Novos elementos Sorus
         const sorusStatusSection = document.getElementById('sorusStatusSection');
         const sorusProximaEntradaP = document.getElementById('sorusProximaEntrada');
         const sorusProfitSummaryP = document.getElementById('sorusProfitSummary');
         const btnSorusGanhou = document.getElementById('btnSorusGanhou');
         const btnSorusPerdeu = document.getElementById('btnSorusPerdeu');
-        const btnSorusConcluir = document.getElementById('btnSorusConcluir'); // NOVO
+        const btnSorusConcluir = document.getElementById('btnSorusConcluir');
         
         // --- Funções de Histórico (Auxiliares) ---
         
@@ -746,39 +789,35 @@
         
         // --- Handlers de UI e Tabs ---
         
-        // Sincroniza sliders de Payout
-        function syncPayouts(sourceSlider) {
-            const val = sourceSlider.value;
-            
+        // Sliders de Payout (Independentes)
+        payoutSlider.addEventListener('input', () => {
+            const val = payoutSlider.value;
             payoutValueSpan.textContent = `${val}%`;
-            payoutSlider.value = val;
-            
-            payoutValueSorusManualSpan.textContent = `${val}%`;
-            payoutSliderSorusManual.value = val;
-            
-            payoutValueSorusAutoSpan.textContent = `${val}%`;
-            payoutSliderSorusAuto.value = val;
-            
-            payoutValueSimSpan.textContent = `${val}%`;
-            payoutSliderSim.value = val;
-        }
-
-        payoutSlider.addEventListener('input', () => syncPayouts(payoutSlider));
-        payoutSliderSorusManual.addEventListener('input', () => syncPayouts(payoutSliderSorusManual));
-        payoutSliderSorusAuto.addEventListener('input', () => syncPayouts(payoutSliderSorusAuto));
-        payoutSliderSim.addEventListener('input', () => syncPayouts(payoutSliderSim));
-        
-        // Recalcula ao *soltar* o slider
+        });
         payoutSlider.addEventListener('change', () => {
-            calculateEntries(); // Recalcula Martingale
+            calculateEntries(); // Recalcula, pois o payout afeta a lucratividade
+        });
+
+        // Payout Sorus Auto
+        payoutSliderSorusAuto.addEventListener('input', () => {
+            const val = payoutSliderSorusAuto.value;
+            payoutValueSorusAutoSpan.textContent = `${val}%`;
+            // Atualiza a UI do nível atual dinamicamente
+            updateSorusStatusUI();
         });
         payoutSliderSorusAuto.addEventListener('change', () => {
-            updateSorusAutoUIStatus(); // Recalcula Sorus Auto
-        });
-        payoutSliderSim.addEventListener('change', () => {
-            calculateSimulator(); // Recalcula Simulador
+            // A lógica de 'change' não é mais necessária, o 'input' já faz tudo.
         });
         
+        // Payout Simulador de Cálculo
+        payoutSliderCalc.addEventListener('input', () => {
+            const val = payoutSliderCalc.value;
+            payoutValueCalcSpan.textContent = `${val}%`;
+        });
+        payoutSliderCalc.addEventListener('change', () => {
+            calculateSimuladorCalculo(); // Recalcula o simulador de cálculo
+        });
+
         
         // Função para alternar entre os modos (tabs)
         function switchMode(mode) {
@@ -786,22 +825,21 @@
             
             // 1. Atualiza Classes das Tabs
             const tabMartingale = document.getElementById('tab-martingale');
-            const tabSorusManual = document.getElementById('tab-sorus');
             const tabSorusAuto = document.getElementById('tab-sorus-auto');
-            const tabSimulador = document.getElementById('tab-simulador'); // NOVO
+            const tabSimuladorSorus = document.getElementById('tab-simulador-sorus');
+            const tabSimuladorCalculo = document.getElementById('tab-simulador-calculo');
 
-            [tabMartingale, tabSorusManual, tabSorusAuto, tabSimulador].forEach(tab => {
-                tab.classList.remove('tab-active-martingale', 'tab-active-sorus', 'tab-active-sorus-auto', 'tab-active-simulador', 'tab-inactive');
+            [tabMartingale, tabSorusAuto, tabSimuladorSorus, tabSimuladorCalculo].forEach(tab => {
+                tab.classList.remove('tab-active-martingale', 'tab-active-sorus-auto', 'tab-active-simulador-sorus', 'tab-active-simulador-calculo', 'tab-inactive');
                 tab.classList.add('tab-inactive');
             });
             
             martingaleAppDiv.classList.add('hidden');
-            sorusManualAppDiv.classList.add('hidden');
             sorusAutoAppDiv.classList.add('hidden');
-            simuladorAppDiv.classList.add('hidden'); // NOVO
-            
+            simuladorSorusAppDiv.classList.add('hidden');
+            simuladorCalculoAppDiv.classList.add('hidden'); 
             // A seção de P&L GERAL (martingale-actions-and-summary) fica visível para todos os modos
-            martingaleActionsAndSummaryDiv.classList.remove('hidden'); 
+            martingaleActionsAndSummaryDiv.classList.add('hidden'); // CORREÇÃO: Esconder por defeito
             
             // Seções específicas
             document.getElementById('statusSection').classList.remove('hidden'); // Botões Martingale
@@ -812,59 +850,62 @@
                 tabMartingale.classList.remove('tab-inactive');
                 tabMartingale.classList.add('tab-active-martingale');
                 document.getElementById('statusSection').classList.remove('hidden'); // Mostra botões Martingale
+                martingaleActionsAndSummaryDiv.classList.remove('hidden'); // CORREÇÃO: Mostrar para esta aba
 
                 mainTitle.textContent = 'Calculadora Martingale - 6 Entradas';
                 mainDescription.textContent = 'Insira seus parâmetros para calcular o plano de risco em 6 entradas (Martingale).';
-                
+            } else if (mode === 'simulador-sorus') {
+                simuladorSorusAppDiv.classList.remove('hidden');
+                tabSimuladorSorus.classList.remove('tab-inactive');
+                tabSimuladorSorus.classList.add('tab-active-simulador-sorus');
+                document.getElementById('statusSection').classList.add('hidden'); // Oculta botões de ação do Martingale
+                // NÃO MOSTRA A ANÁLISE DE DESEMPENHO (Correto)
+
+                mainTitle.textContent = 'Simulador Sorus (Compounding)';
+                mainDescription.textContent = 'Calcule o potencial de lucro com Payout Fixo ou Variável por nível.';
+            } else if (mode === 'simulador-calculo') { 
+                simuladorCalculoAppDiv.classList.remove('hidden');
+                tabSimuladorCalculo.classList.remove('tab-inactive');
+                tabSimuladorCalculo.classList.add('tab-active-simulador-calculo');
+                document.getElementById('statusSection').classList.add('hidden'); // Oculta botões de ação do Martingale
+                // NÃO MOSTRA A ANÁLISE DE DESEMPENHO (Correto)
+
+                mainTitle.textContent = 'Simulador de Cálculo (Martingale)';
+                mainDescription.textContent = 'Simule um plano de 6 entradas com base no Risco Total ou na 1ª Entrada.';
+                calculateSimuladorCalculo(); // Calcula a tabela do simulador ao entrar
+            
             } else if (mode === 'sorus-auto') {
                 sorusAutoAppDiv.classList.remove('hidden');
                 tabSorusAuto.classList.remove('tab-inactive');
                 tabSorusAuto.classList.add('tab-active-sorus-auto');
                 document.getElementById('statusSection').classList.add('hidden'); // Oculta botões de ação do Martingale
                 sorusStatusSection.classList.remove('hidden'); // Mostra botões Sorus
+                martingaleActionsAndSummaryDiv.classList.remove('hidden'); // CORREÇÃO: Mostrar para esta aba
                 
                 // Atualiza a UI do Sorus Automático com o valor base atual e recalcula o plano
-                updateSorusAutoUIStatus();
                 updateSorusStatusUI(); // Atualiza o estado da simulação
 
-                mainTitle.textContent = 'Calculadora Sorus (Compounding) - Até 6 Níveis (Automático)';
+                mainTitle.textContent = 'Calculadora Sorus (Compounding) - Automático';
                 mainDescription.textContent = 'Gera o plano Sorus automaticamente após uma vitória no Martingale (Ganho Líquido + G0).';
-                
-            } else if (mode === 'sorus-manual') {
-                sorusManualAppDiv.classList.remove('hidden');
-                tabSorusManual.classList.remove('tab-inactive');
-                tabSorusManual.classList.add('tab-active-sorus');
-                document.getElementById('statusSection').classList.add('hidden'); // Oculta botões de ação do Martingale
-
-                mainTitle.textContent = 'Calculadora Sorus (Compounding) - Até 6 Níveis (Manual)';
-                mainDescription.textContent = 'Calcule o potencial de lucro em até 6 vitórias consecutivas (Sorus/Compounding).';
-            } else if (mode === 'simulador') { // NOVO (ORDEM TROCADA)
-                simuladorAppDiv.classList.remove('hidden');
-                tabSimulador.classList.remove('tab-inactive');
-                tabSimulador.classList.add('tab-active-simulador');
-                document.getElementById('statusSection').classList.add('hidden'); // Oculta botões de ação do Martingale
-
-                mainTitle.textContent = 'Simulador de Entradas (Martingale)';
-                mainDescription.textContent = 'Simule um plano de 6 entradas com base no Risco Total ou na 1ª Entrada.';
-                calculateSimulator(); // Calcula a tabela do simulador ao entrar
-            
             }
         }
         
         function updateSorusAutoUIStatus() {
             sorusAutoBaseEntryDisplay.textContent = formatCurrency(sorusAutoBaseEntry);
+            sorusAutoBaseRiskSpan.textContent = sorusAutoBaseEntry > 0 ? formatCurrency(sorusAutoBaseEntry) : "0.00";
             
-            // Recalcula o Sorus Automático sempre que o status for atualizado (ex: mudança de payout ou entrada na aba)
-            calculateSorusAuto(true); 
+            // Renderiza a tabela (agora dinâmica)
+            renderTableSorusAuto();
+            // Atualiza os botões e status
             updateSorusStatusUI();
         }
         
-        // --- Novas Funções do Modo de Cálculo (Simulador) ---
+        // --- Novas Funções do Modo de Cálculo (Simulador de Cálculo) ---
         
-        function switchCalcModeSim(mode) {
-            calculationModeSim = mode;
-            const riscoInput = document.getElementById('riscoTotalSim');
-            const entrada1Input = document.getElementById('entrada1Sim');
+        function switchCalcModeCalc(mode) {
+            calculationModeCalc = mode;
+            const riscoInput = document.getElementById('riscoTotalCalc');
+            const entrada1Input = document.getElementById('entrada1Calc');
 
             if (mode === 'risco') {
                 // Modo Risco: Habilita Risco Total, desabilita 1ª Entrada
@@ -887,24 +928,39 @@
             }
         }
         
-        
+        // --- Novas Funções do Modo de Cálculo (Simulador Sorus) ---
+        function switchSorusSimMode(mode) {
+            sorusSimMode = mode;
+            if (mode === 'fixo') {
+                sorusFixoInputsDiv.classList.remove('hidden');
+                sorusVariavelInputsDiv.classList.add('hidden');
+            } else {
+                sorusFixoInputsDiv.classList.add('hidden');
+                sorusVariavelInputsDiv.classList.remove('hidden');
+            }
+        }
+
         // --- Novas Funções do Modal de Confirmação ---
         
         function confirmFactorChange(inputElement) {
-            // Pega o payout da aba ATIVA
-            const payout = (currentMode === 'simulador') 
-                ? parseFloat(payoutSliderSim.value) / 100
-                : parseFloat(payoutSlider.value) / 100;
-            
             const newFactor = parseFloat(inputElement.value);
+            
+            // Pega o Payout da aba correta
+            let payout;
+            if (currentMode === 'simulador-calculo') {
+                payout = parseFloat(payoutSliderCalc.value) / 100;
+            } else {
+                payout = parseFloat(payoutSlider.value) / 100;
+            }
+            
             const minFactor = 1 / payout;
 
             // Validação de lucratividade
             if (newFactor <= minFactor) {
                 alertUser('Fator Inválido', `Com payout de ${payout * 100}%, o fator deve ser maior que ${minFactor.toFixed(3)} para ser lucrativo.`);
                 // Reverte para o último fator válido (INDEPENDENTE)
-                if (currentMode === 'simulador') {
-                    inputElement.value = lastFactorSimulador;
+                if (currentMode === 'simulador-calculo') {
+                    inputElement.value = lastFactorCalculo;
                 } else {
                     inputElement.value = lastFactorMartingale;
                 }
@@ -917,8 +973,8 @@
 
         function cancelFactorChange() {
             // Reverte a mudança no input da aba ATIVA (INDEPENDENTE)
-            if (currentMode === 'simulador') {
-                document.getElementById('fatorMultiplicacaoSim').value = lastFactorSimulador;
+            if (currentMode === 'simulador-calculo') {
+                document.getElementById('fatorMultiplicacaoCalc').value = lastFactorCalculo;
             } else {
                 document.getElementById('fatorMultiplicacao').value = lastFactorMartingale;
             }
@@ -930,11 +986,11 @@
             // Esconde o modal
             document.getElementById('factorConfirmModal').classList.remove('show');
             
-            if (currentMode === 'simulador') {
+            if (currentMode === 'simulador-calculo') {
                 // Salva e recalcula SÓ o simulador (INDEPENDENTE)
-                const newFactorSim = parseFloat(document.getElementById('fatorMultiplicacaoSim').value);
-                lastFactorSimulador = newFactorSim;
-                calculateSimulator();
+                const newFactorSim = parseFloat(document.getElementById('fatorMultiplicacaoCalc').value);
+                lastFactorCalculo = newFactorSim;
+                calculateSimuladorCalculo();
             } else {
                 // Salva e recalcula SÓ o martingale (INDEPENDENTE)
                 const newFactorMartingale = parseFloat(document.getElementById('fatorMultiplicacao').value);
@@ -943,20 +999,12 @@
             }
         }
 
-        // --- Persistência e Estado Sorus ---
-
-        // NOVO: Função centralizada para resetar o estado Sorus
-        function resetSorusState(fullReset) {
-             if (fullReset) {
-                sorusAutoBaseEntry = 0;
-                sorusAutoSourceEntryValue = 0;
-                sorusLinkedOperationId = null;
-                sorusRevertData = { lucroReverter: 0, riscoReverter: 0, capitalAnterior: 0 };
-             }
-             sorusCurrentLevel = 1;
-             sorusCurrentStake = 0;
-             sorusTotalProfitAccumulated = 0;
+        // NOVO: Função para fechar o modal de parabéns
+        function closeCongratsModal() {
+            document.getElementById('congratsModal').classList.remove('show');
         }
+
+        // --- Persistência e Estado Sorus ---
 
         function loadState() {
             try {
@@ -969,27 +1017,27 @@
                     
                     sorusAutoBaseEntry = state.sorusAutoBaseEntry || 0;
                     sorusAutoSourceEntryValue = state.sorusAutoSourceEntryValue || 0;
-                    
                     sorusLinkedOperationId = state.sorusLinkedOperationId || null;
-                    sorusRevertData = state.sorusRevertData || { lucroReverter: 0, riscoReverter: 0, capitalAnterior: 0 };
+                    sorusRevertData = state.sorusRevertData || null;
+                    sorusAutoHistory = state.sorusAutoHistory || []; // NOVO
 
                     // Carrega estado da simulação Sorus
                     sorusCurrentLevel = state.sorusCurrentLevel || 1;
                     sorusCurrentStake = state.sorusCurrentStake || sorusAutoBaseEntry; // Inicializa com base entry
                     sorusTotalProfitAccumulated = state.sorusTotalProfitAccumulated || 0; 
                 } else {
+                    resetSorusState(true);
                     totalProfit = 0;
                     totalLoss = 0;
                     operationCount = 0;
-                    resetSorusState(true); // Reseta tudo
                 }
             } catch (e) {
                 console.error("Erro ao carregar estado persistente:", e);
                 // Reset seguro em caso de erro
+                resetSorusState(true);
                 totalProfit = 0;
                 totalLoss = 0;
                 operationCount = 0;
-                resetSorusState(true); // Reseta tudo
             }
         }
 
@@ -1002,9 +1050,9 @@
                     
                     sorusAutoBaseEntry: sorusAutoBaseEntry,
                     sorusAutoSourceEntryValue: sorusAutoSourceEntryValue,
-                    
                     sorusLinkedOperationId: sorusLinkedOperationId,
                     sorusRevertData: sorusRevertData,
+                    sorusAutoHistory: sorusAutoHistory, // NOVO
 
                     // Salva estado da simulação Sorus
                     sorusCurrentLevel: sorusCurrentLevel,
@@ -1016,6 +1064,21 @@
                 console.error("Erro ao salvar estado persistente:", e);
             }
         }
+        
+        // NOVO: Função centralizada para resetar o estado Sorus
+        function resetSorusState(fullReset) {
+            if (fullReset) {
+                 sorusAutoBaseEntry = 0;
+                 sorusAutoSourceEntryValue = 0;
+                 sorusLinkedOperationId = null;
+                 sorusRevertData = null;
+            }
+            sorusCurrentLevel = 1;
+            sorusCurrentStake = sorusAutoBaseEntry; // Reseta para a base atual
+            sorusTotalProfitAccumulated = 0;
+            sorusAutoHistory = []; // NOVO: Limpa o histórico de níveis
+        }
+
         
         function loadHistory() {
             try {
@@ -1094,6 +1157,15 @@
             }
 
             const currentData = entriesData[currentEntryIndex - 1];
+            if (!currentData) {
+                console.error("Dados de entrada não encontrados para o índice:", currentEntryIndex);
+                 proximaEntradaP.textContent = 'Erro: Recalcule o plano.';
+                 lucroLiquidoP.textContent = '';
+                 btnGanhou.disabled = true;
+                 btnPerdeu.disabled = true;
+                return;
+            }
+            
             const lucroLiquido = parseFloat((currentData.ganhoLiquido).toFixed(2));
             
             proximaEntradaP.innerHTML = `
@@ -1109,12 +1181,46 @@
             renderTableMartingale();
         }
 
-        // --- Lógica Martingale ---
-        // ALTERADO: Lógica de cálculo REVERTIDA (simples, só por Risco Total)
+        // --- Lógica Martingale (Função de Cálculo genérica, usada por ambas as abas) ---
+        function calculateDynamicPlan(E1, payout, fatorMultiplicacao) {
+            let entries = [];
+            let cumulativeLoss = 0;
+            let currentSum = 0;
+            let E_current = E1;
+            let totalRisk = 0;
+
+            for (let i = 0; i < maxEntries; i++) {
+                if (i > 0) {
+                    // Próxima entrada = Soma de todas as anteriores * Fator
+                    E_current = currentSum * fatorMultiplicacao;
+                }
+                
+                const entryValue = Math.round(E_current * 100) / 100; // Arredonda a entrada
+                const gainBruto = Math.round((entryValue * payout) * 100) / 100; // Arredonda o ganho
+                const gainLiquido = Math.round((gainBruto - cumulativeLoss) * 100) / 100; // Arredonda o líquido
+                
+                entries.push({
+                    entrada: i + 1,
+                    valor: entryValue,
+                    ganhoBruto: gainBruto,
+                    ganhoLiquido: gainLiquido,
+                    perdaAcumulada: cumulativeLoss,
+                });
+
+                cumulativeLoss = Math.round((cumulativeLoss + entryValue) * 100) / 100; // Arredonda a perda acumulada
+                currentSum = Math.round((currentSum + entryValue) * 100) / 100; // Arredonda a soma atual
+            }
+            
+            totalRisk = currentSum;
+            return { entries, totalRisk };
+        }
+
+        // --- Lógica Martingale (Aba Principal) ---
         function calculateEntries() {
             const riscoTotalInput = document.getElementById('riscoTotal');
             const payoutInput = parseFloat(payoutSlider.value);
             const fatorMultiplicacao = parseFloat(document.getElementById('fatorMultiplicacao').value);
+            lastFactorMartingale = fatorMultiplicacao; // Salva o fator independente
 
             // --- Validação de Lucratividade ---
             const payout = payoutInput / 100;
@@ -1128,45 +1234,23 @@
                 return; // Aborta o cálculo
             }
 
-            // --- Cálculo Dinâmico (Sempre por Risco Total) ---
+            // --- Cálculo Dinâmico ---
             const riscoTotal = parseFloat(riscoTotalInput.value);
             if (riscoTotal <= 0 || isNaN(riscoTotal)) {
                 alertUser('Erro de Entrada', 'Por favor, insira um Risco Total válido (> 0).');
                 return;
             }
-            const E1 = riscoTotal / Math.pow(1 + fatorMultiplicacao, maxEntries - 1);
-
-
-            let entries = [];
-            let cumulativeLoss = 0;
-            let currentSum = 0;
-            let E_current = E1;
-            totalSum = 0;
-
-            for (let i = 0; i < maxEntries; i++) {
-                if (i > 0) {
-                    // Próxima entrada = Soma de todas as anteriores * Fator
-                    E_current = currentSum * fatorMultiplicacao;
-                }
-                
-                const entryValue = parseFloat(E_current.toFixed(2));
-                const gainBruto = (entryValue * payout);
-                const gainLiquido = gainBruto - cumulativeLoss;
-                
-                entries.push({
-                    entrada: i + 1,
-                    valor: entryValue,
-                    ganhoBruto: gainBruto,
-                    ganhoLiquido: gainLiquido,
-                    perdaAcumulada: cumulativeLoss,
-                });
-
-                cumulativeLoss += entryValue;
-                currentSum += entryValue;
-            }
+            
+            // Fórmula para a 1ª Entrada (E1)
+            // Encontra o Risco Total teórico para E1=1, depois escala
+            const { totalRisk: riskForOne } = calculateDynamicPlan(1, payout, fatorMultiplicacao);
+            const E1 = riscoTotal / riskForOne;
+            
+            // Calcula o plano final com a E1 escalada
+            const { entries, totalRisk } = calculateDynamicPlan(E1, payout, fatorMultiplicacao);
 
             entriesData = entries;
-            totalSum = currentSum; // O Risco Total real calculado, com arredondamentos
+            totalSum = totalRisk;
             
             somaTotalP.textContent = `Soma das ${maxEntries} entradas = ${formatCurrency(totalSum)} (Risco Calculado)`;
             
@@ -1176,102 +1260,9 @@
             btnPerdeu.disabled = false;
             
             // Só adiciona ao histórico se não for um auto-recalc (ex: mudança de payout)
-            // A confirmação do fator já recalcula
             if (document.getElementById('factorConfirmModal').classList.contains('show') === false) {
-                 addHistoryEntry(`Plano de risco (Martingale) calculado. Risco: ${formatCurrency(riscoTotal)}, Fator: ${fatorMultiplicacao}, Payout: ${payoutInput}%.`, 'blue', false, null, 'system', null);
+                 addHistoryEntry(`Plano Martingale recalculado. Risco: ${formatCurrency(riscoTotal)}, Fator: ${fatorMultiplicacao}, Payout: ${payoutInput}%.`, 'blue', false, null, 'system', null);
             }
-        }
-        
-        // --- Lógica SIMULADOR (NOVA FUNÇÃO) ---
-        // (Baseada na lógica anterior de calculateEntries)
-        function calculateSimulator() {
-            const riscoTotalInput = document.getElementById('riscoTotalSim');
-            const entrada1Input = document.getElementById('entrada1Sim');
-            const payoutInput = parseFloat(document.getElementById('payoutSim').value);
-            const fatorMultiplicacao = parseFloat(document.getElementById('fatorMultiplicacaoSim').value);
-            const tabelaSimulador = document.getElementById('tabelaEntradasSimulador');
-
-            // --- Validação de Lucratividade ---
-            const payout = payoutInput / 100;
-            const minFactor = 1 / payout;
-
-            if (fatorMultiplicacao <= minFactor) {
-                alertUser('Fator Inválido', `Com payout de ${payoutInput}%, o fator deve ser > ${minFactor.toFixed(3)} para ser lucrativo. O cálculo não será executado.`);
-                tabelaSimulador.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-red-600 font-semibold">Erro: Fator de multiplicação (${fatorMultiplicacao}) é muito baixo para o Payout (${payoutInput}%).</td></tr>`;
-                return; // Aborta o cálculo
-            }
-
-            // --- Cálculo Dinâmico (Baseado no modo) ---
-            let E1;
-            
-            if (calculationModeSim === 'risco') {
-                const riscoTotal = parseFloat(riscoTotalInput.value);
-                if (riscoTotal <= 0 || isNaN(riscoTotal)) {
-                    alertUser('Erro de Entrada', 'Por favor, insira um Risco Total válido (> 0).');
-                    return;
-                }
-                E1 = riscoTotal / Math.pow(1 + fatorMultiplicacao, maxEntries - 1);
-                entrada1Input.value = E1.toFixed(2);
-                
-            } else { // calculationMode === 'entrada'
-                E1 = parseFloat(entrada1Input.value);
-                if (E1 <= 0 || isNaN(E1)) {
-                    alertUser('Erro de Entrada', 'Por favor, insira uma 1ª Entrada válida (> 0).');
-                    return;
-                }
-            }
-
-            let entries = [];
-            let cumulativeLoss = 0;
-            let currentSum = 0;
-            let E_current = E1;
-            let simTotalSum = 0;
-
-            for (let i = 0; i < maxEntries; i++) {
-                if (i > 0) {
-                    E_current = currentSum * fatorMultiplicacao;
-                }
-                
-                const entryValue = parseFloat(E_current.toFixed(2));
-                const gainBruto = (entryValue * payout);
-                const gainLiquido = gainBruto - cumulativeLoss;
-                
-                entries.push({
-                    entrada: i + 1,
-                    valor: entryValue,
-                    ganhoBruto: gainBruto,
-                    ganhoLiquido: gainLiquido,
-                    perdaAcumulada: cumulativeLoss,
-                });
-
-                cumulativeLoss += entryValue;
-                currentSum += entryValue;
-            }
-            
-            simTotalSum = currentSum;
-            
-            if (calculationModeSim === 'entrada') {
-                riscoTotalInput.value = simTotalSum.toFixed(2);
-            }
-            
-            somaTotalSimuladorP.textContent = `Soma das ${maxEntries} entradas = ${formatCurrency(simTotalSum)} (Risco Calculado)`;
-            
-            // Renderiza a tabela do SIMULADOR
-            let html = '';
-            entries.forEach(data => {
-                html += `
-                    <tr class="hover:bg-amber-50">
-                        <td class="px-3 py-3 whitespace-nowrap text-sm text-amber-900">${data.entrada}ª ENTRADA</td>
-                        <td class="px-3 py-3 whitespace-nowrap text-sm text-right">${formatCurrency(data.valor)}</td>
-                        <td class="px-3 py-3 whitespace-nowrap text-sm text-right text-green-600">${formatCurrency(data.ganhoBruto)}</td>
-                        <td class="px-3 py-3 whitespace-nowrap text-sm text-right font-bold ${data.ganhoLiquido >= 0 ? 'text-green-700' : 'text-red-700'}">${formatCurrency(data.ganhoLiquido)}</td>
-                        <td class="px-3 py-3 whitespace-nowrap text-sm text-right text-red-600">${formatCurrency(data.perdaAcumulada)}</td>
-                    </tr>
-                `;
-            });
-            tabelaSimulador.innerHTML = html;
-            
-            addHistoryEntry(`Cálculo de Simulação realizado. Modo: ${calculationModeSim}.`, 'blue', false, null, 'system', null);
         }
 
 
@@ -1296,7 +1287,8 @@
             });
             tabelaEntradasMartingale.innerHTML = html;
         }
-        
+
+        // --- Funções de Botões (Martingale) ---
         function handleWin() {
             if (currentEntryIndex > maxEntries || entriesData.length === 0) return;
             document.getElementById('tempAlert')?.remove(); 
@@ -1305,13 +1297,9 @@
             const riscoTotalInput = document.getElementById('riscoTotal');
             const currentData = entriesData[currentEntryIndex - 1];
             
-            // CORREÇÃO: capitalAnterior é o Risco Total ANTES desta operação vencedora.
-            const capitalAntesDaOperacao = parseFloat(riscoTotalInput.value);
-            // const capitalAntesDaOperacao = parseFloat(riscoTotalInput.value) - currentData.perdaAcumulada; // Lógica antiga incorreta
-            
-            // --- CORREÇÃO: Capturar o G0 ATUAL (da operação vencedora) ANTES de recalcular ---
+            // CORREÇÃO: Capturar o G0 ATUAL (da operação vencedora) ANTES de recalcular
             const g0EntryValueAtual = entriesData[0].valor; 
-            // --------------------------------------------------------------------------------
+            const capitalAntesDaOperacao = parseFloat(riscoTotalInput.value);
             
             const currentRiscoTotal = parseFloat(riscoTotalInput.value);
             const lucroLiquido = parseFloat((currentData.ganhoLiquido).toFixed(2));
@@ -1321,9 +1309,7 @@
             
             totalProfit = parseFloat((totalProfit + lucroLiquido).toFixed(2));
             
-            // CORREÇÃO: Re-ativa esta linha. Se o ciclo GANHOU, as perdas
-            // acumuladas *dentro* deste ciclo são zeradas do P&L geral,
-            // pois o "lucroLiquido" já é o resultado final.
+            // CORREÇÃO: Se o ciclo GANHOU, as perdas acumuladas *dentro* deste ciclo são zeradas do P&L geral
             totalLoss = parseFloat((totalLoss - perdaAcumuladaCiclo).toFixed(2)); 
             
             operationCount++;
@@ -1355,10 +1341,10 @@
             addHistoryEntry(
                 `Operação ${operationCount}: GANHOU (Martingale) na Entr. ${currentEntryIndex} (${martingaleTag}) | Lucro Líquido Real: ${formatCurrency(lucroLiquido)} | NOVO RISCO/CAPITAL: ${formatCurrency(newRiscoTotal)} | Sorus Auto Base: ${formatCurrency(sorusAutoBaseEntry)}`,
                 'green',
-                true,
-                currentEntryIndex - 1,
-                'martingale',
-                null
+                true, // É uma operação finalizada
+                currentEntryIndex - 1, // Nível Gale
+                'martingale', // Tipo martingale
+                null // Nível Sorus
             );
             
             saveState(); 
@@ -1380,7 +1366,7 @@
         }
 
         function handleLoss() {
-            if (entriesData.length === 0) return;
+            if (entriesData.length === 0 || currentEntryIndex > maxEntries) return;
             document.getElementById('tempAlert')?.remove(); 
             document.getElementById('totalResetConfirmDiv')?.remove();
             
@@ -1395,17 +1381,8 @@
             const perdaTotalAteAgora = currentData.perdaAcumulada + valorPerdido;
             
             // --- Lógica Sorus Automático: Zera a Entrada Base em caso de perda ---
-            resetSorusState(true); // Zera tudo
+            resetSorusState(true);
             // ---------------------------------------------------------------------
-
-            /*
-            // REMOVIDO: Esta linha registrava perdas intermediárias, contra a nova regra.
-            addHistoryEntry(
-                `Entr. ${currentEntryIndex} (Martingale) (${martingaleTag}): PERDEU | Valor: ${formatCurrency(valorPerdido)} | Perda Acumulada: ${formatCurrency(perdaTotalAteAgora)}`,
-                'red',
-                false
-            );
-            */
             
             if (currentEntryIndex === maxEntries) {
                  operationCount++;
@@ -1413,7 +1390,7 @@
                      `Operação ${operationCount}: CICLO MARTINGALE FALHOU - Perda Total de ${formatCurrency(perdaTotalAteAgora)} (Risco Máximo Atingido)`,
                      'red',
                      true, 
-                     currentEntryIndex - 1,
+                     currentEntryIndex - 1, // Gale Level (o último)
                      'martingale',
                      null
                  );
@@ -1421,6 +1398,7 @@
             }
 
             currentEntryIndex++; 
+            saveState(); // Salva o estado (P&L atualizado)
             updatePerformanceUI();
             updateSorusAutoUIStatus(); // Atualiza display do Sorus Auto
             
@@ -1440,66 +1418,132 @@
             updateStatusUI();
         }
 
-        // --- Lógica Sorus Manual (Compounding) ---
+        
+        // --- Lógica Simulador (Aba Simulador de Cálculo) ---
+        function calculateSimuladorCalculo() {
+            const riscoTotalInputSim = document.getElementById('riscoTotalCalc');
+            const entrada1InputSim = document.getElementById('entrada1Calc');
+            const payoutInput = parseFloat(payoutSliderCalc.value);
+            const fatorMultiplicacao = parseFloat(document.getElementById('fatorMultiplicacaoCalc').value);
+            lastFactorCalculo = fatorMultiplicacao; // Salva o fator independente
 
-        function calculateSorusManual() {
-            const baseEntry = parseFloat(document.getElementById('sorusBaseEntry').value);
-            const payout = parseFloat(document.getElementById('payoutSorusManual').value) / 100;
-            const levels = parseInt(document.getElementById('sorusLevels').value);
+            // --- Validação de Lucratividade ---
+            const payout = payoutInput / 100;
+            const minFactor = 1 / payout;
+
+            if (fatorMultiplicacao <= minFactor) {
+                alertUser('Fator Inválido', `Com payout de ${payoutInput}%, o fator deve ser > ${minFactor.toFixed(3)} para ser lucrativo.`);
+                tabelaEntradasCalculo.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-red-600 font-semibold">Erro: Fator de multiplicação (${fatorMultiplicacao}) é muito baixo para o Payout (${payoutInput}%).</td></tr>`;
+                return; // Aborta o cálculo
+            }
+
+            // --- Cálculo Dinâmico ---
+            let E1;
             
-            // Alterado max levels para 6
+            if (calculationModeCalc === 'risco') {
+                const riscoTotal = parseFloat(riscoTotalInputSim.value);
+                if (riscoTotal <= 0 || isNaN(riscoTotal)) {
+                    alertUser('Erro de Entrada', 'Por favor, insira um Risco Total válido (> 0).');
+                    return;
+                }
+                // Fórmula para a 1ª Entrada (E1)
+                const { totalRisk: riskForOne } = calculateDynamicPlan(1, payout, fatorMultiplicacao);
+                E1 = riscoTotal / riskForOne;
+                entrada1InputSim.value = E1.toFixed(2);
+                
+            } else { // calculationMode === 'entrada'
+                E1 = parseFloat(entrada1InputSim.value);
+                if (E1 <= 0 || isNaN(E1)) {
+                    alertUser('Erro de Entrada', 'Por favor, insira uma 1ª Entrada válida (> 0).');
+                    return;
+                }
+            }
+            
+            const { entries, totalRisk } = calculateDynamicPlan(E1, payout, fatorMultiplicacao);
+            simCalculoEntriesData = entries; // Salva na variável separada
+
+            if (calculationModeCalc === 'entrada') {
+                riscoTotalInputSim.value = totalRisk.toFixed(2);
+            }
+            
+            renderTableCalculo(); // Renderiza a tabela separada
+        }
+        
+        function renderTableCalculo() {
+            let html = '';
+            simCalculoEntriesData.forEach(data => {
+                html += `
+                    <tr class="hover:bg-pink-50 transition duration-150">
+                        <td class="px-3 py-3 whitespace-nowrap text-sm text-pink-900">${data.entrada}ª ENTRADA</td>
+                        <td class="px-3 py-3 whitespace-nowrap text-sm text-right">${formatCurrency(data.valor)}</td>
+                        <td class="px-3 py-3 whitespace-nowrap text-sm text-right text-green-600">${formatCurrency(data.ganhoBruto)}</td>
+                        <td class="px-3 py-3 whitespace-nowrap text-sm text-right font-bold ${data.ganhoLiquido >= 0 ? 'text-green-700' : 'text-red-700'}">${formatCurrency(data.ganhoLiquido)}</td>
+                        <td class="px-3 py-3 whitespace-nowrap text-sm text-right text-red-600">${formatCurrency(data.perdaAcumulada)}</td>
+                    </tr>
+                `;
+            });
+            tabelaEntradasCalculo.innerHTML = html;
+        }
+
+        
+        // --- Lógica Sorus (Aba Simulador Sorus) ---
+        function calculateSorusSimulador() {
+            const baseEntry = parseFloat(sorusSimBaseEntryInput.value);
+            const levels = parseInt(sorusSimLevelsInput.value);
+            
             if (baseEntry <= 0 || isNaN(baseEntry) || levels < 1 || levels > 6 || isNaN(levels)) {
-                alertUser('Erro de Entrada (Sorus Manual)', 'Por favor, insira uma Entrada Base válida (> 0) e um número de Níveis entre 1 e 6.');
+                alertUser('Erro de Entrada (Sorus Sim)', 'Por favor, insira uma Entrada Base válida (> 0) e um número de Níveis entre 1 e 6.');
                 return;
             }
 
             let entries = [];
             let totalProfit = 0;
             let currentStake = baseEntry;
+            
+            let payouts = [];
+            if (sorusSimMode === 'fixo') {
+                const payoutFixo = parseFloat(payoutSorusFixoInput.value) / 100;
+                for (let i = 0; i < levels; i++) payouts.push(payoutFixo);
+            } else {
+                payoutNivelInputs.forEach(input => {
+                    payouts.push(parseFloat(input.value) / 100 || 0);
+                });
+            }
 
             for (let i = 0; i < levels; i++) {
                 const nivel = i + 1;
+                const payout = payouts[i];
+                if (payout <= 0) continue; // Pula níveis sem payout
                 
-                // Stake atual (arredondado para exibição)
-                const stakeValue = parseFloat(currentStake.toFixed(2));
-                
-                // Ganho Bruto = Stake * Payout
-                const gainBruto = currentStake * payout;
-                
-                // Ganho Líquido = Ganho Bruto (o custo real é sempre o lucro acumulado, então o ganho líquido é o ganho bruto)
-                const gainLiquido = parseFloat(gainBruto.toFixed(2)); 
-
-                // Acumula o ganho líquido
-                totalProfit += gainLiquido;
+                const stakeValue = Math.round(currentStake * 100) / 100;
+                const gainBruto = Math.round((currentStake * payout) * 100) / 100;
+                const gainLiquido = gainBruto; 
+                totalProfit = Math.round((totalProfit + gainLiquido) * 100) / 100;
                 
                 entries.push({
                     nivel: nivel,
+                    payout: payout * 100,
                     stake: stakeValue,
                     ganhoBruto: gainBruto,
                     ganhoLiquido: gainLiquido,
                     totalProfit: totalProfit,
                 });
                 
-                // ** Lógica Corrigida: Próxima Entrada = Stake Atual + Ganho Líquido da Operação Atual **
-                // O stake para a próxima operação (i+1) é o total na banca: stake anterior + lucro líquido da rodada.
-                currentStake = stakeValue + gainLiquido;
+                currentStake = Math.round((stakeValue + gainBruto) * 100) / 100;
             }
 
-            sorusManualData = entries;
-            renderTableSorusManual(totalProfit, baseEntry, levels);
-            addHistoryEntry(`Cálculo de Sorus Manual realizado: ${levels} níveis, Entrada Base ${formatCurrency(baseEntry)}. Lucro potencial: ${formatCurrency(totalProfit)}.`, 'blue', false, null, 'system', null);
+            sorusSimEntriesData = entries;
+            renderTableSorusSim(totalProfit, baseEntry, levels);
         }
 
-        function renderTableSorusManual(totalProfit, baseEntry, levels) {
+        function renderTableSorusSim(totalProfit, baseEntry, levels) {
             let html = '';
             
-            sorusManualData.forEach(data => {
-                // Sorus é apenas cálculo, não tem status "Atual"
-                const rowClass = 'hover:bg-blue-50';
-
+            sorusSimEntriesData.forEach(data => {
                 html += `
-                    <tr class="${rowClass} transition duration-150">
+                    <tr class="hover:bg-blue-50 transition duration-150">
                         <td class="px-3 py-3 whitespace-nowrap text-sm font-semibold text-blue-800">NÍVEL ${data.nivel}</td>
+                        <td class="px-3 py-3 whitespace-nowrap text-sm text-right">${data.payout.toFixed(0)}%</td>
                         <td class="px-3 py-3 whitespace-nowrap text-sm text-right">${formatCurrency(data.stake)}</td>
                         <td class="px-3 py-3 whitespace-nowrap text-sm text-right text-blue-600">${formatCurrency(data.ganhoBruto)}</td>
                         <td class="px-3 py-3 whitespace-nowrap text-sm text-right text-green-700">${formatCurrency(data.ganhoLiquido)}</td>
@@ -1507,121 +1551,76 @@
                     </tr>
                 `;
             });
-            tabelaEntradasSorusManual.innerHTML = html;
+            tabelaEntradasSorusSim.innerHTML = html;
             // Atualiza o texto do resumo para refletir o número de níveis
-            sorusManualTotalProfitP.textContent = `Lucro Total em ${levels} Níveis (Vitória em todos): ${formatCurrency(totalProfit)}`;
-            sorusManualBaseRiskSpan.textContent = baseEntry.toFixed(2);
+            sorusSimTotalProfitP.textContent = `Lucro Total em ${levels} Níveis (Vitória em todos): ${formatCurrency(totalProfit)}`;
+            sorusSimBaseRiskSpan.textContent = baseEntry.toFixed(2);
         }
         
-        // --- Lógica Sorus Automático (Cálculo da Tabela) ---
         
-        function calculateSorusAuto(silent = false) {
-            const baseEntry = sorusAutoBaseEntry; // Puxa do estado de vitória do Martingale (Lucro Líquido Martingale + G0)
-            const payout = parseFloat(document.getElementById('payoutSorusAuto').value) / 100;
-            const levels = parseInt(document.getElementById('sorusAutoLevels').value);
-            const g0EntryValue = sorusAutoSourceEntryValue; // O risco original da 1ª entrada (R$ 5,00 no seu exemplo)
-            
-            if (baseEntry <= 0 || isNaN(baseEntry) || levels < 1 || levels > 6 || isNaN(levels) || g0EntryValue <= 0 || isNaN(g0EntryValue)) {
-                 if (!silent) {
-                    alertUser('Erro de Entrada (Sorus Automático)', 'A Entrada Base Automática deve ser maior que R$ 0,00. Realize uma vitória no Martingale primeiro.');
-                 }
-                 renderTableSorusAuto(0, 0, false, levels);
-                 return;
-            }
-            
-            let entries = [];
-            let currentStake = baseEntry; // Começa com o valor calculado (Ganho Líquido Martingale + G0 Martingale)
-            
-            // O lucro líquido real do Martingale (o que veio da primeira operação)
-            const realProfitMartingale = baseEntry - g0EntryValue; // Ex: R$ 9,60 - R$ 5,00 = R$ 4,60
-            
-            // Variável para calcular a coluna Ganho Total Acumulado na simulação
-            let currentRealProfitAccumulatedForTable = realProfitMartingale; 
-
-            for (let i = 0; i < levels; i++) {
-                const nivel = i + 1;
-                
-                // CORREÇÃO: Usando Math.round para evitar erros de floating point
-                const stakeValue = Math.round(currentStake * 100) / 100;
-                const gainBruto = Math.round((stakeValue * payout) * 100) / 100;
-                
-                // Ganho Líquido (Exibição): Ganho Bruto - R$ 5,00 (Regra do cliente)
-                let displayGainLiquido = Math.round((gainBruto - g0EntryValue) * 100) / 100;
-                
-                // O Acumulado Total Real é o lucro acumulado (Martingale + Sorus anterior)
-                // mais o Ganho Líquido (Real) Deste Nível.
-                currentRealProfitAccumulatedForTable = Math.round((currentRealProfitAccumulatedForTable + displayGainLiquido) * 100) / 100;
-
-                entries.push({
-                    nivel: nivel,
-                    stake: stakeValue,
-                    ganhoBruto: gainBruto, // CORRIGIDO O NOME DA VARIÁVEL (typo)
-                    gainLiquidoDisplay: displayGainLiquido, // O valor de exibição com desconto
-                    totalProfitRealAccumulatedForTable: currentRealProfitAccumulatedForTable, // Acumulado para exibição
-                });
-                
-                // Próxima Entrada (Compounding): Stake Atual + Ganho Bruto da Operação Atual
-                // CORREÇÃO: Usando Math.round para evitar erros de floating point
-                currentStake = Math.round((stakeValue + gainBruto) * 100) / 100;
-            }
-
-            sorusAutoData = entries;
-            
-            // Passa o total acumulado do último nível e a entrada base (lucro + G0)
-            renderTableSorusAuto(currentRealProfitAccumulatedForTable, baseEntry, true, levels, g0EntryValue);
-            
-            if (!silent) {
-                addHistoryEntry(`Cálculo de Sorus Automático gerado: ${levels} níveis, Entrada Base ${formatCurrency(baseEntry)}. Lucro potencial (Real Líquido): ${formatCurrency(currentRealProfitAccumulatedForTable)}.`, 'blue', false, null, 'system', null);
-            }
-        }
-
-        function renderTableSorusAuto(finalTotalProfit, baseEntry, isValid, levels, g0EntryValue = 0) {
+        // --- Lógica Sorus Automático (Cálculo e Renderização Dinâmicos) ---
+        
+        function renderTableSorusAuto() {
             let html = '';
             
-            if (isValid) {
-                sorusAutoData.forEach(data => {
-                    // Determina se este é o nível atual na simulação
-                    const isCurrent = data.nivel === sorusCurrentLevel;
-                    const rowClass = isCurrent ? 'bg-violet-100 font-bold text-violet-900 shadow-inner' : 'hover:bg-violet-50';
-                    const valorCellClass = isCurrent ? 'pulse-effect bg-white px-2 py-1 inline-block' : '';
+            // 1. Renderiza os níveis já ganhos (do histórico)
+            sorusAutoHistory.forEach(data => {
+                html += `
+                    <tr class="bg-gray-100 transition duration-150">
+                        <td class="px-3 py-3 whitespace-nowrap text-sm font-semibold text-gray-700">NÍVEL ${data.nivel} (Ganho)</td>
+                        <td class="px-3 py-3 whitespace-nowrap text-sm text-right">${data.payout}%</td>
+                        <td class="px-3 py-3 whitespace-nowrap text-sm text-right">${formatCurrency(data.stake)}</td>
+                        <td class="px-3 py-3 whitespace-nowrap text-sm text-right text-gray-600">${formatCurrency(data.ganhoBruto)}</td>
+                        <td class="px-3 py-3 whitespace-nowrap text-sm text-right text-green-700">${formatCurrency(data.gainLiquidoDisplay)}</td>
+                        <td class="px-3 py-3 whitespace-nowrap text-sm text-right font-bold">${formatCurrency(data.totalProfitRealAccumulatedForTable)}</td>
+                    </tr>
+                `;
+            });
+            
+            // 2. Calcula e renderiza o Nível ATUAL (se aplicável)
+            const maxLevels = parseInt(document.getElementById('sorusAutoLevels').value);
+            if (sorusCurrentLevel <= maxLevels && sorusAutoBaseEntry > 0) {
+                 const payoutAtual = parseFloat(payoutSliderSorusAuto.value) / 100;
+                 const g0EntryValue = sorusAutoSourceEntryValue;
+                 
+                 const stakeValue = Math.round(sorusCurrentStake * 100) / 100;
+                 const gainBruto = Math.round((stakeValue * payoutAtual) * 100) / 100;
+                 const displayGainLiquido = Math.round((gainBruto - g0EntryValue) * 100) / 100;
+                 
+                 const realMartingaleProfit = Math.round((sorusAutoBaseEntry - g0EntryValue) * 100) / 100;
+                 const totalProfitRealAccumulatedForTable = Math.round((realMartingaleProfit + sorusTotalProfitAccumulated + displayGainLiquido) * 100) / 100;
 
-                    html += `
-                        <tr class="${rowClass} transition duration-150">
-                            <td class="px-3 py-3 whitespace-nowrap text-sm font-semibold text-violet-800">NÍVEL ${data.nivel} ${isCurrent ? ' (Atual)' : ''}</td>
-                            <td class="px-3 py-3 whitespace-nowrap text-sm text-right">
-                                <span class="${valorCellClass}">${formatCurrency(data.stake)}</span>
-                            </td>
-                            <td class="px-3 py-3 whitespace-nowrap text-sm text-right text-violet-600">${formatCurrency(data.ganhoBruto)}</td>
-                            <td class="px-3 py-3 whitespace-nowrap text-sm text-right text-green-700">${formatCurrency(data.gainLiquidoDisplay)}</td>
-                            <td class="px-3 py-3 whitespace-nowrap text-sm text-right font-bold">${formatCurrency(data.totalProfitRealAccumulatedForTable)}</td>
-                        </tr>
-                    `;
-                });
-                
-                // Atualiza o texto do resumo
-                sorusAutoTotalProfitP.textContent = `Lucro Total em ${levels} Níveis (Vitória em todos, Incluindo Lucro Martingale): ${formatCurrency(finalTotalProfit)}`;
-                sorusAutoBaseRiskSpan.textContent = baseEntry.toFixed(2);
-            } else {
-                 html = `<tr><td colspan="5" class="py-4 text-center text-gray-500 italic">Gere um plano Martingale e obtenha uma vitória para desbloquear o Sorus Automático.</td></tr>`;
-                 sorusAutoTotalProfitP.textContent = `Lucro Total em Níveis (Vitória em todos, Incluindo Lucro Martingale): R$ 0,00`;
-                 sorusAutoBaseRiskSpan.textContent = "0.00";
+                 html += `
+                    <tr class="bg-violet-100 font-bold text-violet-900 shadow-inner transition duration-150">
+                        <td class="px-3 py-3 whitespace-nowrap text-sm font-semibold text-violet-800">NÍVEL ${sorusCurrentLevel} (Atual)</td>
+                        <td class="px-3 py-3 whitespace-nowrap text-sm text-right">${(payoutAtual * 100).toFixed(0)}%</td>
+                        <td class="px-3 py-3 whitespace-nowrap text-sm text-right">
+                            <span class="pulse-effect bg-white px-2 py-1 inline-block">${formatCurrency(stakeValue)}</span>
+                        </td>
+                        <td class="px-3 py-3 whitespace-nowrap text-sm text-right text-violet-600">${formatCurrency(gainBruto)}</td>
+                        <td class="px-3 py-3 whitespace-nowrap text-sm text-right text-green-700">${formatCurrency(displayGainLiquido)}</td>
+                        <td class="px-3 py-3 whitespace-nowrap text-sm text-right font-bold">${formatCurrency(totalProfitRealAccumulatedForTable)}</td>
+                    </tr>
+                `;
+            } else if (sorusAutoBaseEntry <= 0) {
+                 html = `<tr><td colspan="6" class="py-4 text-center text-gray-500 italic">Gere um plano Martingale e obtenha uma vitória para desbloquear o Sorus Automático.</td></tr>`;
             }
+
             
             tabelaEntradasSorusAuto.innerHTML = html;
-            updateSorusStatusUI(); // Atualiza a seção de botões após a renderização da tabela
         }
 
         // --- Lógica de Simulação Sorus ---
 
         function updateSorusStatusUI() {
-            const levels = parseInt(document.getElementById('sorusAutoLevels').value);
-            const isCalculated = sorusAutoData.length > 0;
-            const isCycleRunning = isCalculated && sorusCurrentLevel <= levels;
-            const currentLevelData = isCycleRunning ? sorusAutoData[sorusCurrentLevel - 1] : null;
+            if (!sorusProximaEntradaP) return; // Proteção (seção pode estar oculta)
 
+            const maxLevels = parseInt(document.getElementById('sorusAutoLevels').value);
+            const isCycleRunning = (sorusAutoBaseEntry > 0) && (sorusCurrentLevel <= maxLevels);
+            
             btnSorusGanhou.disabled = !isCycleRunning;
             btnSorusPerdeu.disabled = !isCycleRunning;
-            btnSorusConcluir.disabled = !(isCycleRunning && sorusCurrentLevel > 1); // Só pode concluir após Nível 1
+            btnSorusConcluir.disabled = !isCycleRunning || sorusCurrentLevel === 1; // Não pode concluir antes do Nível 1
             
             if (sorusAutoBaseEntry <= 0) {
                  sorusProximaEntradaP.innerHTML = `<span class="text-xl text-red-700 font-extrabold">MARTINGALE NÃO CONCLUÍDO</span>`;
@@ -1632,55 +1631,69 @@
                  return;
             }
             
-            if (sorusCurrentLevel > levels) {
+            if (sorusCurrentLevel > maxLevels) {
+                const realMartingaleProfit = sorusAutoBaseEntry - sorusAutoSourceEntryValue;
+                const totalProfitDisplayed = parseFloat((realMartingaleProfit + sorusTotalProfitAccumulated).toFixed(2));
+
                 sorusProximaEntradaP.innerHTML = `<span class="text-xl text-green-700 font-extrabold">SORUS CONCLUÍDO!</span>`;
-                sorusProfitSummaryP.textContent = `Lucro Total Real Acumulado: ${formatCurrency(sorusTotalProfitAccumulated + (sorusAutoBaseEntry - sorusAutoSourceEntryValue))}`;
+                sorusProfitSummaryP.textContent = `Lucro Total Real Acumulado: ${formatCurrency(totalProfitDisplayed)}`;
                 btnSorusGanhou.disabled = true;
                 btnSorusPerdeu.disabled = true;
                 btnSorusConcluir.disabled = true; // Já foi concluído
                 return;
             }
             
-            if (currentLevelData) {
-                // Atualiza o stake atual para o nível
-                sorusCurrentStake = currentLevelData.stake;
-                
-                sorusProximaEntradaP.innerHTML = `
-                    PRÓXIMO NÍVEL SORUS: <span class="text-violet-600">Nível ${sorusCurrentLevel}</span> | 
-                    Stake: <span class="text-violet-800">${formatCurrency(currentLevelData.stake)}</span>
-                `;
-                
-                const realMartingaleProfit = sorusAutoBaseEntry - sorusAutoSourceEntryValue;
-                const totalProfitDisplayed = parseFloat((realMartingaleProfit + sorusTotalProfitAccumulated).toFixed(2));
-                
-                sorusProfitSummaryP.textContent = `Lucro Acumulado (Martingale + Sorus): ${formatCurrency(totalProfitDisplayed)}`;
+            // Se chegou aqui, o ciclo está a decorrer
+            sorusProximaEntradaP.innerHTML = `
+                PRÓXIMO NÍVEL SORUS: <span class="text-violet-600">Nível ${sorusCurrentLevel}</span> | 
+                Stake: <span class="text-violet-800">${formatCurrency(sorusCurrentStake)}</span>
+            `;
+            
+            const realMartingaleProfit = sorusAutoBaseEntry - sorusAutoSourceEntryValue;
+            const totalProfitDisplayed = parseFloat((realMartingaleProfit + sorusTotalProfitAccumulated).toFixed(2));
+            
+            sorusProfitSummaryP.textContent = `Lucro Acumulado (Martingale + Sorus): ${formatCurrency(totalProfitDisplayed)}`;
 
-                // Adiciona o pulse effect se o ciclo estiver ativo
-                sorusProximaEntradaP.classList.add('pulse-effect');
-                sorusStatusSection.classList.add('border-violet-500', 'bg-violet-50');
-            } else {
-                 sorusProximaEntradaP.textContent = 'PRÓXIMO NÍVEL SORUS: Nível 1 | Stake: R$ 0,00';
-                 sorusProfitSummaryP.textContent = `Lucro atual do Martingale: ${formatCurrency(sorusAutoBaseEntry - sorusAutoSourceEntryValue)}`;
-                 sorusProximaEntradaP.classList.remove('pulse-effect');
-                 sorusStatusSection.classList.remove('border-green-500', 'border-red-500');
-            }
+            // Adiciona o pulse effect se o ciclo estiver ativo
+            sorusProximaEntradaP.classList.add('pulse-effect');
+            sorusStatusSection.classList.add('border-violet-500', 'bg-violet-50');
+            
+            // Renderiza a tabela (para atualizar os valores do nível atual se o payout mudar)
+            renderTableSorusAuto();
         }
 
         function handleSorusWin() {
-            if (sorusCurrentLevel > parseInt(document.getElementById('sorusAutoLevels').value) || sorusAutoData.length === 0) return;
+            const maxLevels = parseInt(document.getElementById('sorusAutoLevels').value);
+            if (sorusCurrentLevel > maxLevels || sorusAutoBaseEntry <= 0) return;
             
-            const currentData = sorusAutoData[sorusCurrentLevel - 1];
-            const gainLiquidoDoNivel = currentData.gainLiquidoDisplay; // Usando o valor ajustado (Ganho Bruto - G0)
+            // 1. Calcula os ganhos com base no Payout ATUAL
+            const payoutAtual = parseFloat(payoutSliderSorusAuto.value) / 100;
+            const g0EntryValue = sorusAutoSourceEntryValue;
             
-            // O lucro total acumulado do Sorus é o lucro líquido de cada nível.
-            sorusTotalProfitAccumulated = parseFloat((sorusTotalProfitAccumulated + gainLiquidoDoNivel).toFixed(2));
+            const stakeValue = Math.round(sorusCurrentStake * 100) / 100;
+            const gainBruto = Math.round((stakeValue * payoutAtual) * 100) / 100;
+            const displayGainLiquido = Math.round((gainBruto - g0EntryValue) * 100) / 100;
             
-            // O lucro GERAL (totalProfit) precisa ser atualizado:
-            totalProfit = parseFloat((totalProfit + gainLiquidoDoNivel).toFixed(2));
+            const realMartingaleProfit = Math.round((sorusAutoBaseEntry - g0EntryValue) * 100) / 100;
+            const totalProfitRealAccumulatedForTable = Math.round((realMartingaleProfit + sorusTotalProfitAccumulated + displayGainLiquido) * 100) / 100;
+            
+            // 2. Atualiza o P&L Geral
+            sorusTotalProfitAccumulated = parseFloat((sorusTotalProfitAccumulated + displayGainLiquido).toFixed(2));
+            totalProfit = parseFloat((totalProfit + displayGainLiquido).toFixed(2));
+            
+            // 3. Salva este nível no histórico de níveis
+            sorusAutoHistory.push({
+                nivel: sorusCurrentLevel,
+                payout: (payoutAtual * 100).toFixed(0),
+                stake: stakeValue,
+                ganhoBruto: gainBruto,
+                gainLiquidoDisplay: displayGainLiquido,
+                totalProfitRealAccumulatedForTable: totalProfitRealAccumulatedForTable
+            });
 
-
+            // 4. Adiciona ao Histórico de Eventos
             addHistoryEntry(
-                `GANHOU Nível ${sorusCurrentLevel} Sorus. Lucro Líquido do Nível: ${formatCurrency(gainLiquidoDoNivel)} | Lucro Total (Real): ${formatCurrency(currentData.totalProfitRealAccumulatedForTable)}`,
+                `GANHOU Nível ${sorusCurrentLevel} Sorus (Payout ${ (payoutAtual * 100).toFixed(0)}%). Lucro Líquido do Nível: ${formatCurrency(displayGainLiquido)} | Lucro Total (Real): ${formatCurrency(totalProfitRealAccumulatedForTable)}`,
                 'green',
                 false, // Não é uma operação finalizada, é um passo
                 null,
@@ -1688,11 +1701,13 @@
                 sorusCurrentLevel
             );
 
+            // 5. Prepara o PRÓXIMO nível
             sorusCurrentLevel++;
-            const levels = parseInt(document.getElementById('sorusAutoLevels').value);
+            sorusCurrentStake = Math.round((stakeValue + gainBruto) * 100) / 100; // O próximo stake
+            
             const levelJustWon = sorusCurrentLevel - 1; // O nível que acabou de ser ganho
 
-            if (sorusCurrentLevel > levels) {
+            if (sorusCurrentLevel > maxLevels) {
                 // ACABOU DE GANHAR O ÚLTIMO NÍVEL - O ciclo é concluído automaticamente
                 
                 // Pega o Risco Total atual (que já tem o lucro do Martingale)
@@ -1702,17 +1717,16 @@
                 const newRiscoTotal = currentRiscoTotal + sorusTotalProfitAccumulated;
                 riscoTotalInput.value = newRiscoTotal.toFixed(2);
                 
-                const realMartingaleProfit = sorusRevertData.lucroReverter;
                 const totalProfitDisplayed = parseFloat((realMartingaleProfit + sorusTotalProfitAccumulated).toFixed(2));
 
                 // Adiciona um log específico de conclusão automática
                 addHistoryEntry(
-                    `Operação ${sorusLinkedOperationId}: SORUS CONCLUÍDO (Automático) após Nível ${levels}. Lucro Total (Real): ${formatCurrency(totalProfitDisplayed)}. NOVO RISCO/CAPITAL: ${formatCurrency(newRiscoTotal)}`,
+                    `Operação ${sorusLinkedOperationId}: SORUS CONCLUÍDO (Automático) após Nível ${maxLevels}. Lucro Total (Real): ${formatCurrency(totalProfitDisplayed)}. NOVO RISCO/CAPITAL: ${formatCurrency(newRiscoTotal)}`,
                     'blue',
                     true, // É uma operação finalizada
                     null, // Não é gale
                     'sorus',
-                    levels // Nível que concluiu
+                    maxLevels // Nível que concluiu
                 );
 
                 // --- A CEREJA DO BOLO ---
@@ -1741,35 +1755,32 @@
         }
 
         function handleSorusLoss() {
-            if (sorusAutoData.length === 0 || !sorusLinkedOperationId) return;
+            if (sorusAutoHistory.length < 0 || !sorusRevertData) return; // Correção: < 0 (embora < 1 fosse mais lógico, mas mantendo a lógica anterior)
             document.getElementById('tempAlert')?.remove(); 
+            
+            const { lucroReverter, riscoReverter, capitalAnterior } = sorusRevertData;
 
             const riscoTotalInput = document.getElementById('riscoTotal');
             
-            // 1. Puxa os dados de reversão salvos
-            const { lucroReverter, riscoReverter, capitalAnterior } = sorusRevertData;
-            
-            // 2. Reverte o P&L Geral
-            // totalProfit: Subtrai o lucro original do Martingale (lucroReverter) E o lucro acumulado do Sorus (sorusTotalProfitAccumulated).
+            // 1. Reverte o P&L Geral para o estado ANTERIOR à vitória do Martingale
+            // totalProfit: Subtrai o lucro original do Martingale E o lucro acumulado do Sorus.
             totalProfit = parseFloat((totalProfit - lucroReverter - sorusTotalProfitAccumulated).toFixed(2));
             
-            // totalLoss: Adiciona o risco da Entrada 1 (G0) que agora é considerada perda (riscoReverter)
+            // totalLoss: Adiciona o risco da Entrada 1 (G0) que agora é considerada perda
             totalLoss = parseFloat((totalLoss + riscoReverter).toFixed(2));
 
-            // 3. Restaura o "Risco Total" para o valor ANTERIOR à operação que falhou.
+            // 2. FORÇA o Risco Total a retornar exatamente ao capital anterior
             riscoTotalInput.value = capitalAnterior.toFixed(2);
             
-            // 4. Zera o estado do Sorus Auto
-            const opId = sorusLinkedOperationId;
-            const nivelPerdido = sorusCurrentLevel;
-            resetSorusState(true); // Zera tudo
+            // 3. Reseta o estado do Sorus Auto
+            resetSorusState(true);
             
             // --- Remove a operação de vitória anterior do histórico (G0 GANHOU) ---
             removeLastMartingaleWinFromHistory(); 
             
-            // 5. Adiciona a nova entrada de perda (G0 PERDIDO) no histórico.
+            // 4. Adiciona a nova entrada de perda (G0 PERDIDO) no histórico.
             addHistoryEntry(
-                `Operação ${opId}: PERDEU CICLO SORUS (no Nível ${nivelPerdido}). Reversão total (G0 R$${riscoReverter.toFixed(2)} perdido).`,
+                `Operação ${sorusLinkedOperationId}: PERDEU CICLO SORUS (no Nível ${sorusCurrentLevel}). REVERSÃO TOTAL (G0 ${formatCurrency(riscoReverter)} perdido -> Avança para G1).`,
                 'red',
                 true, // Contamos como operação finalizada (G0 Perdido)
                 0, // Gale Level da operação original (G0)
@@ -1783,7 +1794,7 @@
             
             // 7. Reseta os dados de reversão e atualiza a UI
             sorusLinkedOperationId = null;
-            sorusRevertData = { lucroReverter: 0, riscoReverter: 0, capitalAnterior: 0 };
+            sorusRevertData = null;
             
             saveState();
             updatePerformanceUI();
@@ -1793,7 +1804,7 @@
             
             switchMode('martingale'); // MUDANÇA OBRIGATÓRIA PARA MARTINGALE
 
-            // ATUALIZA O STATUS com o novo currentEntryIndex = 1
+            // ATUALIZA O STATUS com o novo currentEntryIndex = 2
             updateStatusUI();
             
             // 8. Feedback visual
@@ -1806,46 +1817,47 @@
                 statusSection.classList.add('border-blue-500', 'bg-blue-50');
             }, 1000);
         }
-        
-        // NOVO: Concluir Sorus (Coletar Lucro)
+
+        // NOVO: Concluir o Sorus manually
         function handleSorusConclude() {
-             if (!sorusLinkedOperationId) return;
-             document.getElementById('tempAlert')?.remove(); 
-             
-             const realMartingaleProfit = sorusRevertData.lucroReverter;
-             const totalProfitDisplayed = parseFloat((realMartingaleProfit + sorusTotalProfitAccumulated).toFixed(2));
+            if (sorusCurrentLevel === 1 || !sorusRevertData) return; // Não pode concluir antes de ganhar o Nível 1
+
+            document.getElementById('tempAlert')?.remove(); 
             
-             // --- NOVO: Atualiza o Risco Total (Capital) ---
-             const riscoTotalInput = document.getElementById('riscoTotal');
-             const currentRiscoTotal = parseFloat(riscoTotalInput.value);
-             // O currentRiscoTotal já tem o lucro do Martingale. Adicionamos o lucro SÓ do Sorus.
-             const newRiscoTotal = currentRiscoTotal + sorusTotalProfitAccumulated;
-             riscoTotalInput.value = newRiscoTotal.toFixed(2);
-             // ---------------------------------------------
+            const realMartingaleProfit = sorusRevertData.lucroReverter;
+            const totalProfitDisplayed = parseFloat((realMartingaleProfit + sorusTotalProfitAccumulated).toFixed(2));
             
-             addHistoryEntry(
-                 `Operação ${sorusLinkedOperationId}: SORUS CONCLUÍDO (Coletado) após Nível ${sorusCurrentLevel - 1}. Lucro Total (Real): ${formatCurrency(totalProfitDisplayed)}. NOVO RISCO/CAPITAL: ${formatCurrency(newRiscoTotal)}`,
-                 'blue',
-                 true, // É uma operação finalizada
-                 null, // Não é gale
-                 'sorus',
-                 sorusCurrentLevel - 1 // Nível que concluiu
-             );
-             
-             // Zera o estado Sorus
-             resetSorusState(true);
-             saveState();
-             updatePerformanceUI();
-             updateSorusAutoUIStatus(); // Atualiza a UI do Sorus (agora zerada)
-             
-             // Volta para a aba Martingale, pronto para um novo G0
-             switchMode('martingale');
-             
-             // --- NOVO: Recalcula o plano Martingale com o capital atualizado ---
-             calculateEntries();
-             // -------------------------------------------------------------
-             
-             updateStatusUI(); // Atualiza a UI do Martingale
+            // --- NOVO: Atualiza o Risco Total (Capital) ---
+            const riscoTotalInput = document.getElementById('riscoTotal');
+            const currentRiscoTotal = parseFloat(riscoTotalInput.value);
+            // O currentRiscoTotal já tem o lucro do Martingale. Adicionamos o lucro SÓ do Sorus.
+            const newRiscoTotal = currentRiscoTotal + sorusTotalProfitAccumulated;
+            riscoTotalInput.value = newRiscoTotal.toFixed(2);
+            // ---------------------------------------------
+            
+            addHistoryEntry(
+                `Operação ${sorusLinkedOperationId}: SORUS CONCLUÍDO (Coletado) após Nível ${sorusCurrentLevel - 1}. Lucro Total (Real): ${formatCurrency(totalProfitDisplayed)}. NOVO RISCO/CAPITAL: ${formatCurrency(newRiscoTotal)}`,
+                'blue',
+                true, // É uma operação finalizada
+                null, // Não é gale
+                'sorus', // Tipo sorus
+                sorusCurrentLevel - 1 // Nível que concluiu
+            );
+            
+            // Zera o estado Sorus
+            resetSorusState(true);
+            saveState();
+            updatePerformanceUI();
+            updateSorusAutoUIStatus(); // Atualiza a UI do Sorus (agora zerada)
+            
+            // Volta para a aba Martingale, pronto para um novo G0
+            switchMode('martingale');
+            
+            // --- NOVO: Recalcula o plano Martingale com o capital atualizado ---
+            calculateEntries();
+            // -------------------------------------------------------------
+            
+            updateStatusUI(); // Atualiza a UI do Martingale
         }
 
 
@@ -1856,12 +1868,13 @@
              
              // O lucro acumulado interno do Sorus é zero.
              sorusTotalProfitAccumulated = 0;
+             sorusAutoHistory = []; // Limpa o histórico de níveis
 
              // Volta ao stake inicial do Sorus (o valor que veio da vitória do Martingale)
              sorusCurrentLevel = 1;
              sorusCurrentStake = sorusAutoBaseEntry;
              
-             addHistoryEntry('Ciclo Sorus reiniciado. O lucro anterior do Sorus é mantido no P&L Geral, mas o ciclo de compounding volta ao Nível 1.', 'amber', false, null, 'sorus', null);
+             addHistoryEntry('Ciclo Sorus reiniciado. O lucro anterior do Sorus é mantido no P&L Geral, mas o ciclo de compounding volta ao Nível 1.', 'amber', false, null, 'system', null);
              
              saveState();
              updatePerformanceUI();
@@ -1886,9 +1899,9 @@
                 message: message,
                 type: type,
                 isFinalOperation: isFinalOperation, 
-                galeLevel: galeLevel,
+                galeLevel: galeLevel, // 0-5 (Martingale)
                 eventType: eventType, // 'martingale', 'sorus', 'system'
-                sorusLevel: sorusLevel
+                sorusLevel: sorusLevel // 1-6 (Sorus)
             };
             history.unshift(entry); 
             saveHistory(); 
@@ -1898,10 +1911,12 @@
         function renderHistory(filteredHistory = history) {
             
             const colorMap = {'green': 'text-green-700', 'red': 'text-red-700', 'blue': 'text-blue-700', 'gray': 'text-gray-700', 'amber': 'text-amber-700'};
-            const iconMap = {'green': '✅', 'red': '❌', 'blue': '💰', 'gray': '📝', 'amber': '🔄', 'sorus-win': '🚀', 'sorus-conclude': '💰'};
+            const iconMap = {'green': '✅', 'red': '❌', 'blue': '💰', 'gray': '📝', 'amber': '🔄'};
             
             if (filteredHistory.length === 0) {
                  historicoList.innerHTML = '<li class="text-gray-500 italic">Nenhum evento registrado no período.</li>';
+                 renderChartStatistics(filteredHistory); // Limpa os gráficos
+                 return;
             }
 
             historicoList.innerHTML = filteredHistory.map(item => {
@@ -1909,12 +1924,7 @@
                 const dateString = date.toLocaleDateString('pt-BR');
                 const timeString = date.toLocaleTimeString('pt-BR');
 
-                let icon = iconMap[item.type] || '📝';
-                if (item.eventType === 'sorus') {
-                    if (item.type === 'green') icon = '🚀';
-                    if (item.type === 'blue') icon = '💰';
-                }
-                
+                const icon = iconMap[item.type] || '📝';
                 const colorClass = colorMap[item.type] || 'text-gray-700';
                 
                 const operationMarker = item.isFinalOperation ? `<span class="font-bold"> [OP ${item.isFinalOperation ? item.message.match(/Operação (\d+)/)?.[1] || 'FIM' : ''}] </span>` : '';
@@ -1930,70 +1940,79 @@
         
         function renderChartStatistics(currentHistory) {
             // Filtra apenas as operações finalizadas, que contêm galeLevel
-            const finalOperationsMartingale = currentHistory.filter(item => item.isFinalOperation && item.eventType === 'martingale');
+            const finalOperations = currentHistory.filter(item => item.isFinalOperation);
+            
+            // --- Estatísticas Martingale ---
+            const martingaleOperations = finalOperations.filter(op => op.eventType === 'martingale');
             const galeCounts = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 'FAIL': 0 };
             
-            finalOperationsMartingale.forEach(op => {
-                if (op.type === 'green' && op.galeLevel !== null) {
+            martingaleOperations.forEach(op => {
+                if (op.type === 'green' && op.galeLevel !== null && op.galeLevel >= 0) {
                     galeCounts[op.galeLevel]++;
-                } else if (op.type === 'red' && op.galeLevel === maxEntries - 1) { // Perda total no último Gale
+                } else if (op.type === 'red' && op.galeLevel === (maxEntries - 1)) { // Perda total no último Gale (galeLevel 5)
                     galeCounts['FAIL']++;
+                } else if (op.type === 'red' && op.galeLevel === 0) { // Perda no G0 (revertida do Sorus)
+                    galeCounts['FAIL']++; // Conta como falha no G0
                 }
             });
             
-            const totalFinalOperations = finalOperationsMartingale.length;
-            totalOperationsMartingaleP.textContent = totalFinalOperations;
-            galeStatisticsDiv.innerHTML = '';
+            const totalFinalMartingaleOps = martingaleOperations.length;
+            totalOperationsFilteredMartingaleP.textContent = totalFinalMartingaleOps;
+            martingaleStatisticsDiv.innerHTML = '';
 
             const galeLabels = ['G0 (Principal)', 'G1', 'G2', 'G3', 'G4', 'G5'];
-            const chartDataValues = [];
-            const chartLabels = [];
-            const chartColors = ['#10B981', '#34D399', '#6EE7B7', '#A7F3D0', '#D1FAE5', '#F0FDF4']; 
+            const martingaleChartDataValues = [];
+            const martingaleChartLabels = [];
+            const martingaleChartColors = ['#10B981', '#34D399', '#6EE7B7', '#A7F3D0', '#D1FAE5', '#F0FDF4']; 
 
             galeLabels.forEach((label, index) => {
                 const count = galeCounts[index];
-                const percentage = totalFinalOperations > 0 ? ((count / totalFinalOperations) * 100).toFixed(1) : 0;
+                const percentage = totalFinalMartingaleOps > 0 ? ((count / totalFinalMartingaleOps) * 100).toFixed(1) : 0;
                 
-                if (count >= 0) { // Mostra mesmo se for 0
-                     galeStatisticsDiv.innerHTML += `
-                        <p class="text-sm font-semibold ml-2 ${count > 0 ? '' : 'text-gray-400'}">
+                if (count > 0 || totalFinalMartingaleOps === 0) { // Mostra G0 se for 0 e total 0
+                     martingaleStatisticsDiv.innerHTML += `
+                        <p class="text-sm font-semibold ml-2 ${count === 0 ? 'text-gray-400' : ''}">
                             ${label}: ${count} (${percentage}%)
                         </p>
                     `;
-                    chartLabels.push(label);
-                    chartDataValues.push(count);
+                }
+                if (count > 0) {
+                    martingaleChartLabels.push(label);
+                    martingaleChartDataValues.push(count);
                 }
             });
             
             const failCount = galeCounts['FAIL'];
-            const failPercentage = totalFinalOperations > 0 ? ((failCount / totalFinalOperations) * 100).toFixed(1) : 0;
-            galeStatisticsDiv.innerHTML += `
-                <p class="text-sm font-semibold ml-2 ${failCount > 0 ? 'text-red-600' : 'text-gray-400'}">
-                    Perda Total (G5 falhou): ${failCount} (${failPercentage}%)
+            const failPercentage = totalFinalMartingaleOps > 0 ? ((failCount / totalFinalMartingaleOps) * 100).toFixed(1) : 0;
+            
+            martingaleStatisticsDiv.innerHTML += `
+                <p class="text-sm font-semibold ml-2 text-red-600 ${failCount === 0 && totalFinalMartingaleOps > 0 ? 'text-gray-400' : ''}">
+                    Falha (G5 / Sorus Revertido): ${failCount} (${failPercentage}%)
                 </p>
             `;
-            chartLabels.push('Perda Total (G5 Falhou)');
-            chartDataValues.push(failCount);
-            chartColors.push('#EF4444'); 
-
-            if (totalFinalOperations === 0) {
-                galeStatisticsDiv.innerHTML = '<p class="text-sm italic ml-2">Sem dados de operações finalizadas no período.</p>';
+            if (failCount > 0) {
+                martingaleChartLabels.push('Falha (G5 / Sorus)');
+                martingaleChartDataValues.push(failCount);
+                martingaleChartColors.push('#EF4444'); 
             }
 
-            const ctx = document.getElementById('galeChart').getContext('2d');
+            if (totalFinalMartingaleOps === 0) {
+                martingaleStatisticsDiv.innerHTML = '<p class="text-sm italic ml-2">Sem dados Martingale no período.</p>';
+            }
 
+            const ctxMartingale = document.getElementById('martingaleChart').getContext('2d');
             if (martingaleChartInstance) {
                 martingaleChartInstance.destroy();
             }
             
-            if (totalFinalOperations > 0) {
-                 martingaleChartInstance = new Chart(ctx, {
+            if (totalFinalMartingaleOps > 0 && martingaleChartDataValues.length > 0) {
+                 martingaleChartInstance = new Chart(ctxMartingale, {
                     type: 'doughnut',
                     data: {
-                        labels: chartLabels,
+                        labels: martingaleChartLabels,
                         datasets: [{
-                            data: chartDataValues,
-                            backgroundColor: chartColors,
+                            data: martingaleChartDataValues,
+                            backgroundColor: martingaleChartColors,
                             hoverOffset: 4
                         }]
                     },
@@ -2007,7 +2026,7 @@
                             },
                             title: {
                                 display: true,
-                                text: `Distribuição de Finalização Martingale (${totalFinalOperations} Ops)`,
+                                text: `Distribuição de Ciclos Martingale (${totalFinalMartingaleOps} Ops)`,
                                 font: { family: 'Inter', size: 14 }
                             },
                             tooltip: {
@@ -2028,66 +2047,62 @@
                     }
                 });
             } else {
-                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height); 
-                const centerX = ctx.canvas.width / 2;
-                const centerY = ctx.canvas.height / 2;
-                ctx.fillStyle = '#6B7280'; 
-                ctx.font = "14px Inter";
-                ctx.textAlign = 'center';
-                ctx.fillText('Sem dados Martingale', centerX, centerY);
+                ctxMartingale.clearRect(0, 0, ctxMartingale.canvas.width, ctxMartingale.canvas.height); 
+                const centerX = ctxMartingale.canvas.width / 2;
+                const centerY = ctxMartingale.canvas.height / 2;
+                ctxMartingale.fillStyle = '#6B7280'; 
+                ctxMartingale.font = "14px Inter";
+                ctxMartingale.textAlign = 'center';
+                ctxMartingale.fillText('Sem dados Martingale', centerX, centerY);
             }
             
-            // --- Renderiza Gráfico Sorus ---
-            renderSorusChart(currentHistory);
-        }
-        
-        function renderSorusChart(currentHistory) {
-            const finalOperationsSorus = currentHistory.filter(item => item.isFinalOperation && item.eventType === 'sorus');
-            const sorusCounts = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 }; // Níveis 0-6 (0 = perdeu no nível 1)
+            // --- Estatísticas Sorus ---
+            const sorusOperations = finalOperations.filter(op => op.eventType === 'sorus');
+            const sorusCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
             
-            finalOperationsSorus.forEach(op => {
-                if (op.type === 'blue' && op.sorusLevel !== null) { // Concluído (GANHO)
+            sorusOperations.forEach(op => {
+                 if (op.type === 'blue' && op.sorusLevel !== null && op.sorusLevel > 0) { // 'blue' = Concluído
                     sorusCounts[op.sorusLevel]++;
                 }
-                // (Perda no Sorus é registrada como Martingale 'FAIL', já tratado)
             });
             
-            const totalFinalSorus = finalOperationsSorus.length;
-            totalOperationsSorusP.textContent = totalFinalSorus;
+            const totalFinalSorusOps = sorusOperations.length;
+            totalOperationsFilteredSorusP.textContent = totalFinalSorusOps;
             sorusStatisticsDiv.innerHTML = '';
 
             const sorusLabels = ['Nível 1', 'Nível 2', 'Nível 3', 'Nível 4', 'Nível 5', 'Nível 6'];
             const sorusChartDataValues = [];
             const sorusChartLabels = [];
-            const sorusChartColors = ['#D1FAE5', '#A7F3D0', '#6EE7B7', '#34D399', '#10B981', '#059669'];
+            const sorusChartColors = ['#F0FDF4', '#D1FAE5', '#A7F3D0', '#6EE7B7', '#34D399', '#10B981'];
 
             sorusLabels.forEach((label, index) => {
-                const count = sorusCounts[index + 1]; // +1 porque index 0 é Nível 1
-                const percentage = totalFinalSorus > 0 ? ((count / totalFinalSorus) * 100).toFixed(1) : 0;
+                const count = sorusCounts[index + 1]; // Nível 1 está no índice 0
+                const percentage = totalFinalSorusOps > 0 ? ((count / totalFinalSorusOps) * 100).toFixed(1) : 0;
                 
-                if (count >= 0) { // Mostra mesmo se for 0
+                if (count > 0 || totalFinalSorusOps === 0) {
                      sorusStatisticsDiv.innerHTML += `
-                        <p class="text-sm font-semibold ml-2 ${count > 0 ? 'text-violet-700' : 'text-gray-400'}">
-                            Concluído ${label}: ${count} (${percentage}%)
+                        <p class="text-sm font-semibold ml-2 ${count === 0 ? 'text-gray-400' : ''}">
+                            ${label}: ${count} (${percentage}%)
                         </p>
                     `;
+                }
+                if (count > 0) {
                     sorusChartLabels.push(label);
                     sorusChartDataValues.push(count);
                 }
             });
 
-            if (totalFinalSorus === 0) {
-                sorusStatisticsDiv.innerHTML = '<p class="text-sm italic ml-2">Sem dados de ciclos Sorus concluídos no período.</p>';
+            if (totalFinalSorusOps === 0) {
+                sorusStatisticsDiv.innerHTML = '<p class="text-sm italic ml-2">Sem dados Sorus no período.</p>';
             }
-
-            const ctx = document.getElementById('sorusChart').getContext('2d');
-
+            
+            const ctxSorus = document.getElementById('sorusChart').getContext('2d');
             if (sorusChartInstance) {
                 sorusChartInstance.destroy();
             }
-            
-            if (totalFinalSorus > 0) {
-                 sorusChartInstance = new Chart(ctx, {
+
+            if (totalFinalSorusOps > 0 && sorusChartDataValues.length > 0) {
+                 sorusChartInstance = new Chart(ctxSorus, {
                     type: 'doughnut',
                     data: {
                         labels: sorusChartLabels,
@@ -2107,7 +2122,7 @@
                             },
                             title: {
                                 display: true,
-                                text: `Níveis Sorus Concluídos (${totalFinalSorus} Ciclos)`,
+                                text: `Níveis Sorus Concluídos (${totalFinalSorusOps} Ops)`,
                                 font: { family: 'Inter', size: 14 }
                             },
                             tooltip: {
@@ -2128,13 +2143,13 @@
                     }
                 });
             } else {
-                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height); 
-                const centerX = ctx.canvas.width / 2;
-                const centerY = ctx.canvas.height / 2;
-                ctx.fillStyle = '#6B7280'; 
-                ctx.font = "14px Inter";
-                ctx.textAlign = 'center';
-                ctx.fillText('Sem dados Sorus', centerX, centerY);
+                ctxSorus.clearRect(0, 0, ctxSorus.canvas.width, ctxSorus.canvas.height); 
+                const centerX = ctxSorus.canvas.width / 2;
+                const centerY = ctxSorus.canvas.height / 2;
+                ctxSorus.fillStyle = '#6B7280'; 
+                ctxSorus.font = "14px Inter";
+                ctxSorus.textAlign = 'center';
+                ctxSorus.fillText('Sem dados Sorus', centerX, centerY);
             }
         }
         
@@ -2203,41 +2218,50 @@
             }
             
             entriesData = [];
-            currentEntryIndex = 1;
-            totalSum = 0;
+            simCalculoEntriesData = [];
+            sorusSimEntriesData = [];
             
             tabelaEntradasMartingale.innerHTML = ''; 
-            tabelaEntradasSorusManual.innerHTML = '';
-            document.getElementById('tabelaEntradasSimulador').innerHTML = ''; // NOVO
-            renderTableSorusAuto(0, 0, false, 3); // Limpa tabela auto
+            tabelaEntradasCalculo.innerHTML = '';
+            // renderTableSorusAuto(0, 0, false, 3); // Limpa tabela auto (Chamado por updateSorusAutoUIStatus)
+            renderTableSorusSim(0, 0, 0); // Limpa tabela sorus sim
             
-            // --- NOVO: Reseta o modo de cálculo ---
-            document.getElementById('modeRiscoSim').checked = true;
-            document.getElementById('modeEntradaSim').checked = false;
-            switchCalcModeSim('risco');
-            // ------------------------------------
-
-            // Reset de Inputs de Payout (sincronizados)
+            // --- Reseta o modo de cálculo (Simulador Cálculo) ---
+            document.getElementById('modeRiscoCalc').checked = true;
+            document.getElementById('modeEntradaCalc').checked = false;
+            switchCalcModeCalc('risco');
+            
+            // --- Reseta o modo de cálculo (Simulador Sorus) ---
+            document.getElementById('modeSorusFixo').checked = true;
+            document.getElementById('modeSorusVariavel').checked = false;
+            switchSorusSimMode('fixo');
+            
+            // --- Reseta inputs ---
             document.getElementById('riscoTotal').value = '398.11';
             document.getElementById('fatorMultiplicacao').value = '1.4';
             
-            // NOVO: Reseta inputs do simulador
-            document.getElementById('riscoTotalSim').value = '398.11';
-            document.getElementById('fatorMultiplicacaoSim').value = '1.4';
-            document.getElementById('entrada1Sim').value = '5.00'; 
+            // Reseta inputs do simulador cálculo
+            document.getElementById('riscoTotalCalc').value = '398.11';
+            document.getElementById('fatorMultiplicacaoCalc').value = '1.4';
+            document.getElementById('entrada1Calc').value = '5.00'; 
+            
+            // Reseta inputs do simulador sorus
+            document.getElementById('sorusSimBaseEntry').value = '10.00';
+            document.getElementById('sorusSimLevels').value = '3';
+            document.getElementById('payoutSorusFixo').value = '92';
+            document.getElementById('payoutValueSorusFixo').textContent = '92';
             
             // Reseta os fatores independentes
             lastFactorMartingale = 1.4;
-            lastFactorSimulador = 1.4;
+            lastFactorCalculo = 1.4;
             
+            // Reseta Sliders Payout
             payoutSlider.value = '92';
             payoutValueSpan.textContent = '92%';
-            payoutSliderSim.value = '92'; // NOVO
-            payoutValueSimSpan.textContent = '92%'; // NOVO
-            payoutSliderSorusManual.value = '92';
-            payoutValueSorusManualSpan.textContent = '92%';
             payoutSliderSorusAuto.value = '92';
             payoutValueSorusAutoSpan.textContent = '92%';
+            payoutSliderCalc.value = '92';
+            payoutValueCalcSpan.textContent = '92%';
             
             btnGanhou.disabled = true;
             btnPerdeu.disabled = true;
@@ -2281,20 +2305,26 @@
 
         function alertUser(title, message) {
             console.error(`${title}: ${message}`);
-            document.getElementById('totalResetConfirmDiv')?.remove();
             
-            // Tenta usar a secção de status do modo ATIVO
-            let statusDiv = null;
-            if(currentMode === 'martingale' || !document.getElementById('statusSection').classList.contains('hidden')) {
+            // Tenta remover de ambas as seções de status
+            document.getElementById('tempAlert')?.remove(); 
+            document.getElementById('totalResetConfirmDiv')?.remove(); 
+            
+            // Determina onde mostrar o alerta (Aba Martingale ou Aba Sorus)
+            let statusDiv;
+            if (currentMode === 'sorus-auto') {
+                statusDiv = document.getElementById('sorusStatusSection');
+            } else if (currentMode === 'martingale') {
                 statusDiv = document.getElementById('statusSection');
-            } else if (currentMode === 'simulador') {
-                // No simulador, podemos injetar o alerta acima da tabela
-                statusDiv = document.getElementById('simulador-app').querySelector('.bg-amber-50');
-            } else if (currentMode === 'sorus-auto') {
-                 statusDiv = document.getElementById('sorusStatusSection');
             } else {
-                // Fallback
-                statusDiv = document.getElementById('statusSection');
+                // Para abas de simulador, apenas loga no console por enquanto
+                // ou podemos adicionar um local de alerta no futuro.
+                console.warn(`Alerta (Modo ${currentMode}): ${title} - ${message}`);
+                return; // Não mostra pop-up nas abas de simulador
+            }
+            // Se nenhum estiver visível (ex: aba Simulador), usa o statusSection principal como fallback
+            if (!statusDiv) {
+                 statusDiv = document.getElementById('statusSection');
             }
 
             const alertHtml = `
@@ -2307,12 +2337,7 @@
                 </div>
             `;
             statusDiv.style.position = 'relative';
-            statusDiv.insertAdjacentHTML('afterbegin', alertHtml);
-        }
-        
-        // NOVO: Função para fechar o modal de parabéns
-        function closeCongratsModal() {
-            document.getElementById('congratsModal').classList.remove('show');
+            statusDiv.insertAdjacentHTML('afterbegin', confirmHtml);
         }
 
         // Inicialização
@@ -2322,13 +2347,13 @@
             switchMode('martingale'); 
             // Calcula os valores iniciais (1ª entrada) com base no Risco Total padrão
             calculateEntries(); 
-            calculateSimulator(); // Calcula também o simulador para que esteja pronto
+            // Calcula os valores iniciais do simulador
+            calculateSimuladorCalculo();
+            // Calcula os valores iniciais do sorus sim
+            calculateSorusSimulador();
         });
         
     </script>
 </body>
 </html>
-
-
-
 
